@@ -488,7 +488,7 @@
 
 
 ;; Python support for lsp-mode using pyls.
-;; Install: pip install python-language-server
+;; Install: pip install 'python-language-server[all]'
 (use-package lsp-python
   :commands lsp-python-enable
   :hook (python-mode . lsp-python-enable))
