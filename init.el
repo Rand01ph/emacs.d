@@ -59,18 +59,10 @@
 (setq use-package-always-ensure t)
 (setq use-package-verbose t)
 
-(use-package diminish)
-
-;; auto-compile 能够在插件及其他配置文件加载前需要重新编译的话，重新编译他们。
-(use-package auto-compile
-  :config (auto-compile-on-load-mode))
-
-
 ;; evil config
 (use-package evil
   :ensure t
   :init
-  (setq evil-want-integration nil)
   (setq evil-want-C-u-scroll t)
   :config
   (evil-mode 1)
@@ -108,6 +100,9 @@
   (define-key evil-normal-state-map (kbd "s-/") 'evilnc-comment-or-uncomment-lines)
   (define-key evil-visual-state-map (kbd "s-/") 'evilnc-comment-or-uncomment-lines)
 )
+
+
+(use-package diminish)
 
 ;; theme
 (use-package monokai-theme
