@@ -49,13 +49,23 @@
   ;; Note: Must be the last to involve all backends
   (setq company-backends (mapcar #'company-backend-with-yas company-backends)))
 
+(use-package company-lsp
+  :ensure t
+  :after company
+  :defines company-backends
+  :functions company-backend-with-yas
+  :init (cl-pushnew (company-backend-with-yas 'company-lsp) company-backends))
+
 
 ;; Emacs client for the Language Server Protocol
 ;; https://github.com/emacs-lsp/lsp-mode
 (use-package lsp-mode
+  :ensure t
+  :defer t
   :diminish lsp-mode
   :config
   (setq lsp-inhibit-message t)
+  (setq lsp-message-project-root-warning t)
 
   ;; https://emacs-china.org/t/topic/6392/2
   (defun restart-lsp-server ()
@@ -65,8 +75,9 @@
     (revert-buffer t t)
     (message "LSP server restarted."))
 
-  (require 'lsp-imenu)
-  (add-hook 'lsp-after-open-hook 'lsp-enable-imenu)
+  (use-package lsp-imenu
+    :defer t)
+
   (lsp-define-stdio-client lsp-python "python"
 			   (lsp-make-traverser #'(lambda (dir)
 						   (directory-files
@@ -81,11 +92,5 @@
               ([remap xref-find-definitions] . lsp-ui-peek-find-definitions)
               ([remap xref-find-references] . lsp-ui-peek-find-references))
   :hook (lsp-mode . lsp-ui-mode))
-
-(use-package company-lsp
-  :after company
-  :defines company-backends
-  :functions company-backend-with-yas
-  :init (cl-pushnew (company-backend-with-yas 'company-lsp) company-backends))
 
 (provide 'custom-company)

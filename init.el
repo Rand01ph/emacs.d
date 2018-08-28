@@ -34,11 +34,12 @@
 
 (require 'custom-program)
 (require 'custom-company)
+(require 'custom-lsp)
 
 (require 'custom-python)
 (require 'custom-rust)
 (require 'custom-json)
-(require 'custom-javascript)
+(require 'custom-web)
 (require 'custom-lua)
 
 (custom-set-variables
@@ -48,7 +49,7 @@
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
    (quote
-    (doom-themes pyenv-mode-auto moe-theme lsp-rust pyenv-mode lsp-python company-lsp lsp-ui lsp-mode company-quickhelp company evil-leader evil-escape which-key use-package smex smartparens rainbow-delimiters projectile monokai-theme flycheck exec-path-from-shell evil-surround evil-nerd-commenter diminish counsel anzu)))
+    (org-bullets doom-themes pyenv-mode-auto moe-theme lsp-rust pyenv-mode lsp-python company-lsp lsp-ui lsp-mode company-quickhelp company evil-leader evil-escape which-key use-package smex smartparens rainbow-delimiters projectile monokai-theme flycheck exec-path-from-shell evil-surround evil-nerd-commenter diminish counsel anzu)))
  '(safe-local-variable-values
    (quote
     ((ssh-deploy-on-explicit-save . t)
