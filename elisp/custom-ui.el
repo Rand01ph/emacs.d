@@ -60,9 +60,15 @@
 ;;   :init
 ;;   (load-theme 'monokai t))
 
-(use-package moe-theme
+;; (use-package moe-theme
+;;   :ensure t
+;;   :config
+;;   (load-theme 'moe-dark t))
+
+(use-package doom-themes
   :ensure t
   :config
-  (load-theme 'moe-dark t))
+  (load-theme 'doom-molokai t)
+  (doom-themes-org-config))
 
 (provide 'custom-ui)

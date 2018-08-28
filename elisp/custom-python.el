@@ -3,7 +3,18 @@
 ;; Install: pip install 'python-language-server[all]'
 (use-package lsp-python
   :commands lsp-python-enable
-  :hook (python-mode . lsp-python-enable))
+  :after (lsp-mode)
+  :hook (python-mode . lsp-python-enable)
+  :config
+  ;; Replace with my own traverser for now, as the current one is buggy.
+  (lsp-define-stdio-client lsp-python "python"
+			   (lsp-make-traverser
+			    #'(lambda (dir)
+				(directory-files
+				 dir
+				 nil
+				 "\\(__init__\\|setup\\|manage\\)\\.py\\|requirements.txt")))
+			   '("pyls")))
 
 ;; Python
 (use-package pyenv-mode
