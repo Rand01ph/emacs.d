@@ -66,4 +66,4 @@
 (use-package typescript-mode
   :ensure t)
 
-(provide 'costom-web)
+(provide 'custom-web)

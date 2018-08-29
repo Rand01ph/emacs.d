@@ -65,10 +65,22 @@
 ;;   :config
 ;;   (load-theme 'moe-dark t))
 
+(use-package doom-modeline
+  :ensure t
+  :defer t
+  :hook (after-init . doom-modeline-init)
+  :config
+  (setq doom-modeline-buffer-file-name-style 'file-name))
+
 (use-package doom-themes
   :ensure t
-  :config
+  :init
+  ;(load-theme 'doom-one t)
   (load-theme 'doom-molokai t)
-  (doom-themes-org-config))
+  :config
+  (doom-themes-visual-bell-config)
+  (doom-themes-org-config)
+  ;(doom-themes-treemacs-config)
+  )
 
 (provide 'custom-ui)
