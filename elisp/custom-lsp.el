@@ -3,7 +3,6 @@
 ;; https://github.com/emacs-lsp/lsp-mode
 (use-package lsp-mode
   :ensure t
-  :defer t
   :diminish lsp-mode
   :config
   (setq lsp-inhibit-message t)
@@ -17,21 +16,22 @@
     (interactive)
     (setq lsp--workspaces (make-hash-table :test #'equal))
     (revert-buffer t t)
-    (message "LSP server restarted."))
-
-  (lsp-define-stdio-client lsp-python "python"
-			   (lsp-make-traverser #'(lambda (dir)
-						   (directory-files
-						    dir
-						    nil
-						    "\\(__init__\\|setup\\)\\.py")))
-			   '("pyls"))
-  )
+    (message "LSP server restarted.")))
 
 (use-package lsp-ui
   :bind (:map lsp-ui-mode-map
 	      ([remap xref-find-definitions] . lsp-ui-peek-find-definitions)
 	      ([remap xref-find-references] . lsp-ui-peek-find-references))
   :hook (lsp-mode . lsp-ui-mode))
+
+
+(use-package company-lsp
+  :ensure t
+  :after company lsp-mode
+  :defines company-backends
+  :functions company-backend-with-yas
+  :init (cl-pushnew (company-backend-with-yas 'company-lsp) company-backends))
+
+
 
 (provide 'custom-lsp)

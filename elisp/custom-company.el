@@ -49,12 +49,4 @@
   ;; Note: Must be the last to involve all backends
   (setq company-backends (mapcar #'company-backend-with-yas company-backends)))
 
-(use-package company-lsp
-  :ensure t
-  :after company
-  :defines company-backends
-  :functions company-backend-with-yas
-  :init (cl-pushnew (company-backend-with-yas 'company-lsp) company-backends))
-
-
 (provide 'custom-company)

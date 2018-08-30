@@ -25,6 +25,7 @@
   (pyenv-mode)
   :hook python-mode)
 
-(use-package pyenv-mode-auto)
+(use-package pyenv-mode-auto
+  :ensure t)
 
 (provide 'custom-python)
