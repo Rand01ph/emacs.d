@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: Python Header
+# key: pyheader
+# --
+#!/usr/bin/env python
+# encoding: utf-8
+

@@ -41,6 +41,7 @@
 (require 'custom-json)
 (require 'custom-web)
 (require 'custom-lua)
+(require 'custom-go)
 
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
@@ -49,7 +50,7 @@
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
    (quote
-    (lsp-imenu doom-modeline org-bullets doom-themes pyenv-mode-auto moe-theme lsp-rust pyenv-mode lsp-python company-lsp lsp-ui lsp-mode company-quickhelp company evil-leader evil-escape which-key use-package smex smartparens rainbow-delimiters projectile monokai-theme flycheck exec-path-from-shell evil-surround evil-nerd-commenter diminish counsel anzu)))
+    (yasnippet-snippets go-mode lsp-imenu doom-modeline org-bullets doom-themes pyenv-mode-auto moe-theme lsp-rust pyenv-mode lsp-python company-lsp lsp-ui lsp-mode company-quickhelp company evil-leader evil-escape which-key use-package smex smartparens rainbow-delimiters projectile monokai-theme flycheck exec-path-from-shell evil-surround evil-nerd-commenter diminish counsel anzu)))
  '(safe-local-variable-values
    (quote
     ((ssh-deploy-on-explicit-save . t)

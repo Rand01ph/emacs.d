@@ -22,4 +22,16 @@
   :ensure t
   :init (global-flycheck-mode))
 
+;; YASnippet
+(use-package yasnippet
+  :ensure t
+  :config
+  (add-hook 'prog-mode-hook #'yas-minor-mode))
+
+(use-package yasnippet-snippets
+  :ensure t
+  :after yasnippet
+  :config
+  (yas-reload-all))
+
 (provide 'custom-program)
