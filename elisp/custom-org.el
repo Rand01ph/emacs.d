@@ -1,42 +1,46 @@
 ;;custom-org.el
 
+(use-package htmlize
+  :ensure t)
+
+
 (use-package org
   :config
   (setq org-publish-project-alist
 	'(("blog"
 	   :components ("blog-content" "blog-static"))
 	  ("blog-content"
-	   :base-directory "~/Projects/blog/org"
+	   :base-directory "~/Projects/Rand01ph.github.io/org"
+	   :base-extension "org" ;扩展名
+	   :publishing-directory "~/Projects/Rand01ph.github.io"
 	   :recursive t
 	   :publishing-function (org-html-publish-to-html)
-	   :base-extension "org"
-	   :html-extension "html"
-	   :html-doctype "html5"
-	   :publishing-directory "~/Projects/blog/public_html/"
-	   :with-toc nil
-	   :html-postamble nil
-	   :html-preamble t
+	   :headline-levels 4
+           :section-numbers nil
 	   :auto-preamble t
-	   :auto-sitemap t                ; Generate sitemap.org automagically...
-	   :sitemap-filename "sitemap.org"  ; ... call it sitemap.org (it's the default)...
-	   :sitemap-title "Sitemap"         ; ... with title 'Sitemap'.
+	   :with-toc t
+	   
+	   :sitemap-file-entry-format "%d - %t"
+	   :sitemap-date-format "%d.%m.%Y"
 	   :sitemap-sort-files anti-chronologically
-	   :sitemap-file-entry-format "%d %t"
+	   :sitemap-filename "index.org"  ; ... call it sitemap.org (it's the default)...
+	   :sitemap-title "Just for fun"         ; ... with title 'Sitemap'.
+	   :auto-sitemap t                ; Generate sitemap.org automagically...
+
+	   :html-doctype "html5"
+	   :html-validation-link nil
+	   :html-link-home "index.html"
+	   :html-link-up "index.html"
+
 	   :author "Rand01ph"
 	   :email "tanyawei1991 at gmail dot com"
-	   :sitemap-file-entry-format "%d %t"
-	   :sitemap-date-format "%Y-%m"
-	   :section-numbers nil
-	   :preserve-breaks t
+           :language "zh-CN"
 	   :html-head-extra
-	   "<link rel=\"stylesheet\" href=\"./static/worg2.css\">"
-	   :htmlized-source t
-	   :html-head-include-scripts nil
-	   :html-head-include-default-style nil)
+	   "<link rel=\"stylesheet\" type=\"text/css\" href=\"https://gongzhitaao.org/orgcss/org.css\"/>")
 	  ("blog-static"
-	   :base-directory "~/Projects/blog/org/static"
+	   :base-directory "~/Projects/Rand01ph.github.io/org/static"
 	   :base-extension "css\\|js\\|png\\|jpg\\|gif\\|pdf"
-	   :publishing-directory "~/Projects/blog/public_html/static/"
+	   :publishing-directory "~/Projects/Rand01ph.github.io/static/"
 	   :recursive t
 	   :publishing-function (org-publish-attachment)))))
 
