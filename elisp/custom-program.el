@@ -1,3 +1,9 @@
+;;; custom-program.el --- -*- lexical-binding: t; -*-
+
+;;; Commentary:
+;;; GNU Emacs configuration file
+
+;;; Code:
 
 ;; projects
 (use-package projectile
@@ -10,9 +16,7 @@
 
 (use-package helm-projectile
   :ensure t
-  :after
-  helm
-  projectile
+  :after (helm projectile)
   :bind ("s-t" . helm-projectile-find-file)
   :config
   (helm-projectile-on))
@@ -24,14 +28,15 @@
 
 ;; YASnippet
 (use-package yasnippet
-  :ensure t
-  :config
-  (add-hook 'prog-mode-hook #'yas-minor-mode))
+  :diminish yas-minor-mode
+  :hook (after-init . yas-global-mode)
+  :config (use-package yasnippet-snippets))
 
-(use-package yasnippet-snippets
-  :ensure t
-  :after yasnippet
-  :config
-  (yas-reload-all))
+;; yaml
+(use-package yaml-mode
+  :mode
+  (("\\.yml$" . yaml-mode)
+   ("\\.yaml$" . yaml-mode)))
 
 (provide 'custom-program)
+;;; custom-program.el ends here

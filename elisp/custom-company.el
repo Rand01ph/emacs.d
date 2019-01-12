@@ -1,5 +1,6 @@
-
-;; company
+;;; custom-company.el --- -*- lexical-binding: t; -*-
+;;; Commentary:
+;;; Code:
 
 (use-package company
   :diminish company-mode
@@ -50,3 +51,4 @@
   (setq company-backends (mapcar #'company-backend-with-yas company-backends)))
 
 (provide 'custom-company)
+;;; custom-company.el ends here

@@ -1,16 +1,22 @@
-;;; init.el --- My Emacs configurations.	-*- lexical-binding: t -*-
+;;; init.el --- My Emacs configurations.   -*- lexical-binding: t -*- no-byte-compile: t; -*-
 
+;;; Commentary:
+;;
+;; init configurations.
+;;
+
+;;; Code:
+
+;;; config package manager
 (require 'package)
-;;; packages:
 (setq package-archives
       '(("gnu"   . "http://elpa.emacs-china.org/gnu/")
 	("melpa" . "http://elpa.emacs-china.org/melpa/")
 	("org"   . "http://elpa.emacs-china.org/org/")))
-
 (package-initialize)
 
+;; bootstrap use-package
 ;; ensure that use-package is installed
-;; use-package
 (setq package-enable-at-startup nil)
 (unless (package-installed-p 'use-package)
   (progn
@@ -24,7 +30,9 @@
 
 (add-to-list 'load-path (expand-file-name "elisp" user-emacs-directory))
 
+;; Constants
 (require 'custom-const)
+
 (require 'custom-setup)
 (require 'custom-ui)
 
@@ -35,6 +43,7 @@
 (require 'custom-program)
 (require 'custom-company)
 (require 'custom-lsp)
+(require 'custom-docker)
 
 (require 'custom-python)
 (require 'custom-rust)
@@ -42,6 +51,10 @@
 (require 'custom-web)
 (require 'custom-lua)
 (require 'custom-go)
+(require 'custom-php)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; init.el ends here
 
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
