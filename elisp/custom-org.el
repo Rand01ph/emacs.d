@@ -1,19 +1,21 @@
-;;custom-org.el
+;;; custom-org.el --- Summary
+;;; Commentary:
+
+;;; Code:
 
 (use-package htmlize
   :ensure t)
 
 (use-package org
+  :ensure nil
+  :hook ((org-mode . org-indent-mode)
+         (org-indent-mode . (lambda() (diminish 'org-indent-mode))))
   :config
-  (defun org-publish-sitemap-time-entry (entry style project)
-    (format "%s %s"
-	    (format-time-string
-	     "[%Y-%m-%d %a %H:%s]"
-	     (org-publish-find-date entry project))
-	    (org-publish-sitemap-default-entry entry style project)))
-
+  ;;; orgmode 下源码高亮
+  (setq org-src-fontify-natively t)
   (setq org-publish-project-alist
-	'(("blog"
+	'(
+	  ("blog"
 	   :components ("blog-content" "blog-static"))
 	  ("blog-content"
 	   :base-directory "~/Projects/OrgNote/Blog"
@@ -26,7 +28,6 @@
 	   :auto-preamble t
 	   :with-toc t
 
-	   :sitemap-format-entry org-publish-sitemap-time-entry
 	   :sitemap-date-format "%Y-%m-%d"
 	   :sitemap-file-entry-format "%d *%t*"
 	   :sitemap-sort-files anti-chronologically
@@ -36,6 +37,20 @@
 
 	   :html-doctype "html5"
 	   :html-validation-link nil
+	   :html-head "
+<link rel=\"shortcut icon\" type=\"image/x-icon\" href=\"/favicon.ico\"/>
+<link rel=\"stylesheet\" type=\"text/css\" href=\"/css/org.css\"/> 
+<meta name=\"viewport\" content=\"width=device-width; initial-scale=1.0; maximum-scale=1.0; user-scalable=0;\">
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src=\"https://www.googletagmanager.com/gtag/js?id=UA-67269379-3\"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-67269379-3');
+</script>"
+
 	   :html-link-home "index.html"
 	   :html-link-up "index.html"
 
@@ -52,15 +67,24 @@
 	   :recursive t
 	   :publishing-function (org-publish-attachment)))))
 
-;;; orgmode 下源码高亮
-(setq org-src-fontify-natively t)
-
-(setq org-indent-mode t)
 
 ;; More fancy UI
 (use-package org-bullets
   :ensure t
+  :defer
   :hook (org-mode . org-bullets-mode))
+
+(defvar load-language-list '((emacs-lisp . t)
+			     (perl . t)
+			     (python . t)
+			     (ruby . t)
+			     (plantuml . t)))
+
+
+(org-babel-do-load-languages 'org-babel-load-languages
+			     load-language-list)
 
 
 (provide 'custom-org)
+
+;;; custom-org.el ends here
