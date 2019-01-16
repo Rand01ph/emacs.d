@@ -7,9 +7,6 @@
   :ensure t)
 
 (use-package org
-  :ensure nil
-  :hook ((org-mode . org-indent-mode)
-         (org-indent-mode . (lambda() (diminish 'org-indent-mode))))
   :config
   ;;; orgmode 下源码高亮
   (setq org-src-fontify-natively t)
@@ -37,10 +34,11 @@
 
 	   :html-doctype "html5"
 	   :html-validation-link nil
+	   :html-preamble: nil
+	   :html-head-include-scripts nil ;Disable the default javascript snippet
+	   :html-head-include-default-style nil ;Disable the default css style
 	   :html-head "
-<link rel=\"shortcut icon\" type=\"image/x-icon\" href=\"/favicon.ico\"/>
-<link rel=\"stylesheet\" type=\"text/css\" href=\"/css/org.css\"/> 
-<meta name=\"viewport\" content=\"width=device-width; initial-scale=1.0; maximum-scale=1.0; user-scalable=0;\">
+<link rel=\"stylesheet\" type=\"text/css\" href=\"https://gongzhitaao.org/orgcss/org.css\"/>
 <!-- Global site tag (gtag.js) - Google Analytics -->
 <script async src=\"https://www.googletagmanager.com/gtag/js?id=UA-67269379-3\"></script>
 <script>
@@ -56,9 +54,7 @@
 
 	   :author "Rand01ph"
 	   :email "tanyawei1991@gmail.com"
-	   :language "zh-CN"
-	   :html-head-extra
-	   "<link rel=\"stylesheet\" type=\"text/css\" href=\"https://gongzhitaao.org/orgcss/org.css\"/>")
+	   :language "zh-CN")
 
 	  ("blog-static"
 	   :base-directory "~/Projects/OrgNote/Blog/static"
