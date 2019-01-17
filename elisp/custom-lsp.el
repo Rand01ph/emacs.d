@@ -1,3 +1,8 @@
+;;; custom-lsp.el --- lsp configuration
+
+;;; Commentary:
+
+;;; Code:
 
 ;; Emacs client for the Language Server Protocol
 ;; https://github.com/emacs-lsp/lsp-mode
@@ -32,6 +37,5 @@
   :functions company-backend-with-yas
   :init (cl-pushnew (company-backend-with-yas 'company-lsp) company-backends))
 
-
-
 (provide 'custom-lsp)
+;;; custom-lsp.el ends here
