@@ -1,3 +1,4 @@
+;;; Code:
 
 ;;; Disable toolbar & menubar & scroll-bar
 (if (fboundp 'menu-bar-mode) (menu-bar-mode -1))
@@ -9,7 +10,6 @@
 ;;(set-frame-parameter (selected-frame) 'alpha <both>)
 (set-frame-parameter (selected-frame) 'alpha '(85 . 85))
 (add-to-list 'default-frame-alist '(alpha . (85 . 85)))
-
 
 ;; mode-line
 
@@ -60,27 +60,9 @@
 ;;   :init
 ;;   (load-theme 'monokai t))
 
-;; (use-package moe-theme
-;;   :ensure t
-;;   :config
-;;   (load-theme 'moe-dark t))
-
-(use-package doom-modeline
+(use-package moe-theme
   :ensure t
-  :defer t
-  :hook (after-init . doom-modeline-init)
   :config
-  (setq doom-modeline-buffer-file-name-style 'file-name))
-
-(use-package doom-themes
-  :ensure t
-  :init
-  ;(load-theme 'doom-one t)
-  (load-theme 'doom-molokai t)
-  :config
-  (doom-themes-visual-bell-config)
-  (doom-themes-org-config)
-  ;(doom-themes-treemacs-config)
-  )
+  (load-theme 'moe-dark t))
 
 (provide 'custom-ui)

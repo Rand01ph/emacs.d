@@ -1,3 +1,7 @@
+;;; custom-setup.el --- Summary
+;;; Commentary:
+
+;;; Code:
 (when (version<= "26.0.50" emacs-version )
   (global-display-line-numbers-mode))
 
@@ -26,4 +30,12 @@
   :ensure t
   :config (exec-path-from-shell-initialize))
 
+(use-package auto-package-update
+   :ensure t
+   :config
+   (setq auto-package-update-delete-old-versions t
+         auto-package-update-interval 4)
+   (auto-package-update-maybe))
+
 (provide 'custom-setup)
+;;; custom-setup.el ends here

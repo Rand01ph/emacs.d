@@ -8,34 +8,28 @@
 ;; https://github.com/emacs-lsp/lsp-mode
 (use-package lsp-mode
   :ensure t
-  :diminish lsp-mode
+  :commands lsp
+  :init
+  (setq lsp-auto-guess-root t)    ; 自動选project root
   :config
-  (setq lsp-inhibit-message t)
-  (setq lsp-message-project-root-warning t)
-  (require 'lsp-imenu)
-  (add-hook 'lsp-after-open-hook 'lsp-enable-imenu)
-
-  ;; https://emacs-china.org/t/topic/6392/2
-  (defun restart-lsp-server ()
-    "Restart LSP server."
-    (interactive)
-    (setq lsp--workspaces (make-hash-table :test #'equal))
-    (revert-buffer t t)
-    (message "LSP server restarted.")))
-
-(use-package lsp-ui
-  :bind (:map lsp-ui-mode-map
-	      ([remap xref-find-definitions] . lsp-ui-peek-find-definitions)
-	      ([remap xref-find-references] . lsp-ui-peek-find-references))
-  :hook (lsp-mode . lsp-ui-mode))
-
+  (require 'lsp-clients)
+  (add-hook 'python-mode-hook #'lsp)
+  (add-hook 'go-mode-hook #'lsp)
+  )
 
 (use-package company-lsp
-  :ensure t
-  :after company lsp-mode
-  :defines company-backends
-  :functions company-backend-with-yas
-  :init (cl-pushnew (company-backend-with-yas 'company-lsp) company-backends))
+  :commands company-lsp)
+
+(use-package lsp-ui
+  :commands lsp-ui-mode
+  :config
+  (add-hook 'lsp-mode-hook 'lsp-ui-mode))
+
+;;; company
+(use-package company
+  :config
+  (global-company-mode)
+  (push 'company-lsp company-backends))
 
 (provide 'custom-lsp)
 ;;; custom-lsp.el ends here

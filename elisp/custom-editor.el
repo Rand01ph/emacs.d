@@ -27,14 +27,15 @@
 (use-package helm-rg
   :ensure t)
 
-(use-package smartparens
-  :ensure t
-  :diminish smartparens-mode
-  :init
-  (smartparens-global-mode t)
-  (smartparens-strict-mode t)
-  (show-smartparens-global-mode t)
-  (require 'smartparens-config))
+(use-package smartparens-config
+  :ensure smartparens
+  :config
+  (progn
+    (show-smartparens-global-mode t)))
+
+(add-hook 'prog-mode-hook 'turn-on-smartparens-strict-mode)
+(add-hook 'markdown-mode-hook 'turn-on-smartparens-strict-mode)
+
 
 (use-package rainbow-delimiters
   :ensure t
