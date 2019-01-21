@@ -92,10 +92,15 @@
 (add-hook 'markdown-mode-hook 'turn-on-smartparens-strict-mode)
 
 ;; theme
-(use-package moe-theme
+;; (use-package moe-theme
+;;   :ensure t
+;;   :config
+;;   (load-theme 'moe-dark t))
+
+(use-package doom-themes
   :ensure t
-  :config
-  (load-theme 'moe-dark t))
+  :init
+  (load-theme 'doom-one t))
 
 ;; 字体配置
 ;; M+ 1m    Noto Sans CJK SC
@@ -172,29 +177,43 @@
 ;;; helm
 (use-package helm
   :ensure t
-  :defines helm-buffers-fuzzy-matching
+  :defines helm-buffers-fuzzy-matching helm-recentf-fuzzy-match helm-M-x-fuzzy-match
   :bind (("M-x" . helm-M-x)
 	 ("C-x b" . helm-mini)
 	 ("C-x C-b" . helm-buffers-list)
 	 ("M-y" . helm-show-kill-ring)
 	 ("C-x C-f" . helm-find-files))
   :config
-  (setq helm-buffers-fuzzy-matching t)
+  (setq helm-buffers-fuzzy-matching t
+	helm-recentf-fuzzy-match t
+	helm-M-x-fuzzy-match t)
   )
 
-;; helm-rg
 (use-package helm-rg
   :ensure t
   :after helm
   :bind (("C-c k" . helm-rg)))
 
 ;;; projectile
-(use-package projectile
+;; (use-package projectile
+;;   :ensure t
+;;   :config
+;;   (define-key projectile-mode-map (kbd "s-p") 'projectile-command-map)
+;;   (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
+;;   (projectile-mode +1))
+
+;;; kubernetes
+(use-package kubernetes
   :ensure t
-  :config
-  (define-key projectile-mode-map (kbd "s-p") 'projectile-command-map)
-  (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
-  (projectile-mode +1))
+  :commands (kubernetes-overview))
+
+(use-package kubernetes-tramp
+  :ensure t)
+
+;; If you want to pull in the Evil compatibility package.
+;; (use-package kubernetes-evil
+;;   :ensure t
+;;   :after kubernetes)
 
 ;;; lsp-mode
 (use-package lsp-mode
@@ -269,7 +288,7 @@
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
    (quote
-    (python-mode yasnippet-snippets yaml-mode which-key web-mode use-package smartparens rainbow-delimiters pyenv-mode prettier-js php-mode moe-theme lua-mode lsp-ui lsp-rust lsp-javascript-typescript lsp-html lsp-css kubernetes-tramp kubernetes json-mode js2-refactor helm-rg helm-projectile go-mode flycheck exec-path-from-shell evil-surround evil-nerd-commenter evil-leader evil-escape emmet-mode diminish company-lsp auto-package-update anzu))))
+    (doom-themes dracula-theme solarized-theme kubernetes-evil python-mode yasnippet-snippets yaml-mode which-key web-mode use-package smartparens rainbow-delimiters pyenv-mode prettier-js php-mode moe-theme lua-mode lsp-ui lsp-rust lsp-javascript-typescript lsp-html lsp-css kubernetes-tramp kubernetes json-mode js2-refactor helm-rg helm-projectile go-mode flycheck exec-path-from-shell evil-surround evil-nerd-commenter evil-leader evil-escape emmet-mode diminish company-lsp auto-package-update anzu))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
