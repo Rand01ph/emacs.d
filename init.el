@@ -82,6 +82,15 @@
 (set-frame-parameter (selected-frame) 'alpha '(85 . 85))
 (add-to-list 'default-frame-alist '(alpha . (85 . 85)))
 
+;; 括号提示
+(use-package smartparens-config
+  :ensure smartparens
+  :config
+  (show-smartparens-global-mode t))
+
+(add-hook 'prog-mode-hook 'turn-on-smartparens-strict-mode)
+(add-hook 'markdown-mode-hook 'turn-on-smartparens-strict-mode)
+
 ;; theme
 (use-package moe-theme
   :ensure t
@@ -93,25 +102,25 @@
 (defun my-default-font()
   "Config my font."
   (interactive)
-  (setq fonts
-        (cond ((eq system-type 'darwin)     '("Monaco"           "STHeiti"))
-              ((eq system-type 'gnu/linux)  '("M+ 1m"            "Noto Sans CJK SC"))
-              ((eq system-type 'windows-nt) '("DejaVu Sans Mono" "Microsoft Yahei"))))
+  (defvar my-fonts
+    (cond ((eq system-type 'darwin)     '("Monaco"           "STHeiti"))
+	  ((eq system-type 'gnu/linux)  '("M+ 1m"            "Noto Sans CJK SC"))
+	  ((eq system-type 'windows-nt) '("DejaVu Sans Mono" "Microsoft Yahei"))))
   (set-face-attribute 'default nil :font
-                      (format "%s:pixelsize=%d" (car fonts) 14))
+		      (format "%s:pixelsize=%d" (car my-fonts) 14))
   (dolist (charset '(kana han symbol cjk-misc bopomofo))
     (set-fontset-font (frame-parameter nil 'font) charset
-                      (font-spec :family (car (cdr fonts)) :size 12)))
+		      (font-spec :family (car (cdr my-fonts)) :size 12)))
   ;; Fix chinese font width and rescale
   (setq face-font-rescale-alist '(("STHeiti" . 1.2) ("STFangsong" . 1.2) ("Microsoft Yahei" . 1.2) ("Noto Sans CJK SC" . 1.2)))
   )
 
 (add-to-list 'after-make-frame-functions
-         (lambda (new-frame)
-           (select-frame new-frame)
-           (if window-system
-           (my-default-font)
-         )))
+	     (lambda (new-frame)
+	       (select-frame new-frame)
+	       (if window-system
+		   (my-default-font)
+		 )))
 
 (if window-system
     (my-default-font)
@@ -159,6 +168,33 @@
   (define-key evil-normal-state-map (kbd "s-/") 'evilnc-comment-or-uncomment-lines)
   (define-key evil-visual-state-map (kbd "s-/") 'evilnc-comment-or-uncomment-lines)
 )
+
+;;; helm
+(use-package helm
+  :ensure t
+  :defines helm-buffers-fuzzy-matching
+  :bind (("M-x" . helm-M-x)
+	 ("C-x b" . helm-mini)
+	 ("C-x C-b" . helm-buffers-list)
+	 ("M-y" . helm-show-kill-ring)
+	 ("C-x C-f" . helm-find-files))
+  :config
+  (setq helm-buffers-fuzzy-matching t)
+  )
+
+;; helm-rg
+(use-package helm-rg
+  :ensure t
+  :after helm
+  :bind (("C-c k" . helm-rg)))
+
+;;; projectile
+(use-package projectile
+  :ensure t
+  :config
+  (define-key projectile-mode-map (kbd "s-p") 'projectile-command-map)
+  (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
+  (projectile-mode +1))
 
 ;;; lsp-mode
 (use-package lsp-mode
