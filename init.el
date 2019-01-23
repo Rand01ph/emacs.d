@@ -1,4 +1,4 @@
-;;; init.el --- Rand01ph's Emacs configurations.   -*- lexical-binding: t -*- no-byte-compile: t; -*-
+;;; init.el --- Rand01ph's Emacs configurations.  -*- lexical-binding: t; no-byte-compile: nil; -*-
 
 ;; Version: 0.0.1
 
