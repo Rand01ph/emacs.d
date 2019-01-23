@@ -102,6 +102,13 @@
   :init
   (load-theme 'doom-one t))
 
+;; (use-package all-the-icons
+;;   :ensure t)
+
+;; (use-package doom-modeline
+;;       :ensure t
+;;       :hook (after-init . doom-modeline-mode))
+
 ;; 字体配置
 ;; M+ 1m    Noto Sans CJK SC
 (defun my-default-font()
@@ -279,6 +286,67 @@
 	 ("\\.phtml" . php-mode))
   :commands php-mode)
 
+;; Org Mode
+(use-package htmlize
+  :ensure t)
+
+(use-package org
+  :defines org-publish-project-alist
+  :config
+  ;;; orgmode 下源码高亮
+  (setq org-src-fontify-natively t)
+  (setq org-publish-project-alist
+	'(
+	  ("blog"
+	   :components ("blog-content" "blog-static"))
+	  ("blog-content"
+	   :base-directory "~/Projects/OrgNote/Blog"
+	   :base-extension "org" ;扩展名
+	   :publishing-directory "~/Projects/Rand01ph.github.io"
+	   :recursive t
+	   :publishing-function (org-html-publish-to-html)
+	   :headline-levels 4
+	   :section-numbers nil
+	   :with-toc t
+
+	   :sitemap-date-format "%Y-%m-%d"
+	   :sitemap-file-entry-format "%d *%t*"
+	   :sitemap-sort-files anti-chronologically
+	   :sitemap-filename "index.org"  ; ... call it sitemap.org (it's the default)...
+	   :sitemap-title "Just for fun"         ; ... with title 'Sitemap'.
+	   :auto-sitemap t                ; Generate sitemap.org automagically...
+
+	   :html-doctype "html5"
+	   :html-validation-link nil
+	   :html-preamble: nil
+	   :html-head-include-scripts nil ;Disable the default javascript snippet
+	   :html-head-include-default-style nil ;Disable the default css style
+	   :html-head "
+<link rel=\"stylesheet\" type=\"text/css\" href=\"https://gongzhitaao.org/orgcss/org.css\"/>
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src=\"https://www.googletagmanager.com/gtag/js?id=UA-67269379-3\"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-67269379-3');
+</script>"
+
+	   :html-link-home "index.html"
+	   :html-link-up "index.html"
+
+	   :author "Rand01ph"
+	   :email "tanyawei1991@gmail.com"
+	   :language "zh-CN")
+
+	  ("blog-static"
+	   :base-directory "~/Projects/OrgNote/Blog/static"
+	   :base-extension "css\\|js\\|png\\|jpg\\|gif\\|pdf"
+	   :publishing-directory "~/Projects/Rand01ph.github.io/static/"
+	   :recursive t
+	   :publishing-function (org-publish-attachment)))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; init.el ends here
 (custom-set-variables
@@ -288,7 +356,7 @@
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
    (quote
-    (doom-themes dracula-theme solarized-theme kubernetes-evil python-mode yasnippet-snippets yaml-mode which-key web-mode use-package smartparens rainbow-delimiters pyenv-mode prettier-js php-mode moe-theme lua-mode lsp-ui lsp-rust lsp-javascript-typescript lsp-html lsp-css kubernetes-tramp kubernetes json-mode js2-refactor helm-rg helm-projectile go-mode flycheck exec-path-from-shell evil-surround evil-nerd-commenter evil-leader evil-escape emmet-mode diminish company-lsp auto-package-update anzu))))
+    (htmlize doom-modeline doom-themes dracula-theme solarized-theme kubernetes-evil python-mode yasnippet-snippets yaml-mode which-key web-mode use-package smartparens rainbow-delimiters pyenv-mode prettier-js php-mode moe-theme lua-mode lsp-ui lsp-rust lsp-javascript-typescript lsp-html lsp-css kubernetes-tramp kubernetes json-mode js2-refactor helm-rg helm-projectile go-mode flycheck exec-path-from-shell evil-surround evil-nerd-commenter evil-leader evil-escape emmet-mode diminish company-lsp auto-package-update anzu))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
