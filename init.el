@@ -292,7 +292,15 @@
 
 (use-package org
   :defines org-publish-project-alist
+  :functions org-publish-find-date org-publish-sitemap-default-entry
   :config
+  (defun rk/org-publish-sitemap-time-entry (entry style project)
+    "My org sitemap entry with time ENTRY STYLE PROJECT rk short for 9r0k."
+    (format "%s %s"
+	    (format-time-string
+	     "[%Y-%m-%d]"
+	     (org-publish-find-date entry project))
+	    (org-publish-sitemap-default-entry entry style project)))
   ;;; orgmode 下源码高亮
   (setq org-src-fontify-natively t)
   (setq org-publish-project-alist
@@ -309,12 +317,11 @@
 	   :section-numbers nil
 	   :with-toc t
 
-	   :sitemap-date-format "%Y-%m-%d"
-	   :sitemap-file-entry-format "%d *%t*"
-	   :sitemap-sort-files anti-chronologically
+	   :auto-sitemap t                ; Generate sitemap.org automagically...
 	   :sitemap-filename "index.org"  ; ... call it sitemap.org (it's the default)...
 	   :sitemap-title "Just for fun"         ; ... with title 'Sitemap'.
-	   :auto-sitemap t                ; Generate sitemap.org automagically...
+	   :sitemap-sort-files anti-chronologically
+	   :sitemap-format-entry rk/org-publish-sitemap-time-entry
 
 	   :html-doctype "html5"
 	   :html-validation-link nil
