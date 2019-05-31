@@ -13,7 +13,7 @@
 (setq user-full-name "Rand01ph"
       user-mail-address "tanyawei1991@gmail.com")
 
-(setq gc-cons-threshold 50000000)
+(setq gc-cons-threshold (* 20 1024 1024))
 (setq large-file-warning-threshold 100000000)
 
 (prefer-coding-system 'utf-8)
@@ -275,30 +275,58 @@
 ;;   :after kubernetes)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;补全和语法检查
-;;; lsp-mode
+;; This is the main mode for LSP
 (use-package lsp-mode
-  :commands lsp)
-(use-package company-lsp)
+  :init (setq lsp-prefer-flymake nil)
+  :ensure t)
+
+;; This makes imenu-lsp-minor-mode available. This minor mode
+;; will show a table of contents of methods, classes, variables.
+;; You can configure it to be on the left by using `configure`
+
+(add-hook 'lsp-after-open-hook 'lsp-enable-imenu)
+
+;; lsp-ui enables the fancy showing of documentation, error
+;; messages and type hints
 (use-package lsp-ui
+  :ensure t
   :config
+  (setq lsp-ui-sideline-ignore-duplicate t)
   (add-hook 'lsp-mode-hook 'lsp-ui-mode))
 
-;;; company
-(use-package company
-  :ensure t
-  :diminish company-mode
-  :commands (global-company-mode)
-  :config
-  (global-company-mode)
-  (push 'company-lsp company-backends))
+;; company is the best autocompletion system for emacs (probably)
+;; and this uses the language server to provide semantic completions
 
-;;; flycheck
+(use-package company-lsp
+  :commands company-lsp
+  :config
+  (push 'company-lsp company-backends))
+;; I use pyenv to handle my virtual environments, so when I enable
+;; pyenv in a Python buffer, it will trigger lsp. Otherwise, it
+;; will use the old systems (I think based on jedi)
+
+(add-hook 'pyenv-mode-hook 'lsp)
+
+;; Flycheck checks your code and helps show alerts from the linter
 (use-package flycheck
-  :ensure t
-  :diminish flycheck-mode
-  :commands (global-flycheck-mode)
-  :init
-  (add-hook 'after-init-hook #'global-flycheck-mode))
+  :init (global-flycheck-mode))
+
+;; Show flake8 errors in lsp-ui
+(defun lsp-set-cfg ()
+  (let ((lsp-cfg `(:pyls (:configurationSources ("flake8")))))
+    (lsp--set-configuration lsp-cfg)))
+
+;; Activate that after lsp has started
+(add-hook 'lsp-after-initialize-hook 'lsp-set-cfg)
+
+;; I like proper fonts for documentation, in this case I use the
+;; Inter font. High legibility, small size
+
+(add-hook 'lsp-ui-doc-frame-hook
+	  (lambda (frame _w)
+	    (set-face-attribute 'default frame
+		 :font "Inter"
+		 :height 140)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -313,11 +341,23 @@
   :mode ("\\.json\\'" . json-mode))
 
 ;; python
-(use-package python-mode
+;; pip install "python-language-server[all]" bpython mypy flake8
+(use-package python
+  :mode (("\\.py\\'" . python-mode))
   :defer t
-  :commands python-mode
+  :init
+  (setq python-indent 4)
   :config
-  (add-hook 'python-mode-hook #'lsp))
+  ;; PEP 8 compliant filling rules, 79 chars maximum
+  (add-hook 'python-mode-hook #'subword-mode)
+  )
+
+(use-package pyvenv
+  :ensure t
+  :after python
+  :config
+  (setenv "WORKON_HOME" (expand-file-name "~/.pyenv/versions"))
+  )
 
 ;; golang environment
 (use-package go-mode
@@ -427,7 +467,12 @@
     ("84d2f9eeb3f82d619ca4bfffe5f157282f4779732f48a5ac1484d94d5ff5b279" default)))
  '(package-selected-packages
    (quote
-    (rich-minority smart-mode-line-powerline-theme smart-mode-line htmlize doom-modeline doom-themes dracula-theme solarized-theme kubernetes-evil python-mode yasnippet-snippets yaml-mode which-key web-mode use-package smartparens rainbow-delimiters pyenv-mode prettier-js php-mode moe-theme lua-mode lsp-ui lsp-rust lsp-javascript-typescript lsp-html lsp-css kubernetes-tramp kubernetes json-mode js2-refactor helm-rg helm-projectile go-mode flycheck exec-path-from-shell evil-surround evil-nerd-commenter evil-leader evil-escape emmet-mode diminish company-lsp auto-package-update anzu))))
+    (rich-minority smart-mode-line-powerline-theme smart-mode-line htmlize doom-modeline doom-themes dracula-theme solarized-theme kubernetes-evil python-mode yasnippet-snippets yaml-mode which-key web-mode use-package smartparens rainbow-delimiters pyenv-mode prettier-js php-mode moe-theme lua-mode lsp-ui lsp-rust lsp-javascript-typescript lsp-html lsp-css kubernetes-tramp kubernetes json-mode js2-refactor helm-rg helm-projectile go-mode flycheck exec-path-from-shell evil-surround evil-nerd-commenter evil-leader evil-escape emmet-mode diminish company-lsp auto-package-update anzu)))
+ '(safe-local-variable-values
+   (quote
+    ((ssh-deploy-on-explicit-save . t)
+     (ssh-deploy-root-remote . "/ssh:root@ampil-dev:/opt/disk2/var/www/ampil")
+     (ssh-deploy-root-local . "/home/tan/Nsfocus/Projects/Ampil/trunk/api")))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
