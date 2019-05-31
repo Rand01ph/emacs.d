@@ -1,6 +1,6 @@
 ;;; init.el --- Rand01ph's Emacs configurations.  -*- lexical-binding: t; no-byte-compile: nil; -*-
 
-;; Version: 0.0.1
+;; Version: 0.0.2
 
 ;;; Commentary:
 ;; Emacs 配置,缓慢进化中
@@ -9,17 +9,29 @@
 
 ;;; Code:
 
+;;; Basic Setup
+(setq user-full-name "Rand01ph"
+      user-mail-address "tanyawei1991@gmail.com")
+
+(setq gc-cons-threshold 50000000)
+(setq large-file-warning-threshold 100000000)
+
+(prefer-coding-system 'utf-8)
+(set-default-coding-systems 'utf-8)
+(set-terminal-coding-system 'utf-8)
+(set-keyboard-coding-system 'utf-8)
+
 ;;; config package manager
 (require 'package)
+(setq package-enable-at-startup nil)
 (setq package-archives
-      '(("gnu"   . "http://mirrors.tuna.tsinghua.edu.cn/elpa/gnu/")
-	("melpa" . "http://mirrors.tuna.tsinghua.edu.cn/elpa/melpa/")
-	("org"   . "http://mirrors.tuna.tsinghua.edu.cn/elpa/org/")))
+      '(("gnu"   . "http://elpa.emacs-china.org/gnu/")
+	("melpa" . "http://elpa.emacs-china.org/melpa/")
+	("org"   . "http://elpa.emacs-china.org/org/")))
 (package-initialize)
 
 ;; bootstrap use-package
 ;; ensure that use-package is installed
-(setq package-enable-at-startup nil)
 (unless (package-installed-p 'use-package)
   (progn
     (package-refresh-contents)
@@ -28,7 +40,8 @@
 ;; Should set before loading `use-package'
 (defvar use-package-always-ensure t)
 
-(require 'use-package)
+(eval-when-compile
+  (require 'use-package))
 
 (add-to-list 'load-path (expand-file-name "elisp" user-emacs-directory))
 
@@ -62,6 +75,8 @@
 (setq backup-directory-alist
     `((".*" . ,temporary-file-directory)))
 
+(add-hook 'before-save-hook 'whitespace-cleanup)
+
 ;;; exec-path-from-shell
 (use-package exec-path-from-shell
   :if (memq window-system '(ns mac x))
@@ -69,6 +84,7 @@
   :config
   (exec-path-from-shell-initialize)
   (exec-path-from-shell-copy-envs '("PATH" "GOPATH")))
+
 
 ;; 外观配置
 ;;; Disable toolbar & menubar & scroll-bar
@@ -82,32 +98,20 @@
 (set-frame-parameter (selected-frame) 'alpha '(85 . 85))
 (add-to-list 'default-frame-alist '(alpha . (85 . 85)))
 
-;; 括号提示
-(use-package smartparens-config
-  :ensure smartparens
-  :config
-  (show-smartparens-global-mode t))
-
-(add-hook 'prog-mode-hook 'turn-on-smartparens-strict-mode)
-(add-hook 'markdown-mode-hook 'turn-on-smartparens-strict-mode)
-
-;; theme
-;; (use-package moe-theme
-;;   :ensure t
-;;   :config
-;;   (load-theme 'moe-dark t))
-
 (use-package doom-themes
   :ensure t
-  :init
-  (load-theme 'doom-one t))
+  :config
+  (load-theme 'doom-one t)
+  (doom-themes-visual-bell-config))
 
-;; (use-package all-the-icons
-;;   :ensure t)
+(use-package smart-mode-line-powerline-theme
+  :ensure t)
 
-;; (use-package doom-modeline
-;;       :ensure t
-;;       :hook (after-init . doom-modeline-mode))
+(use-package smart-mode-line
+  :ensure t
+  :config
+  (setq sml/theme 'powerline)
+  (add-hook 'after-init-hook 'sml/setup))
 
 ;; 字体配置
 ;; M+ 1m    Noto Sans CJK SC
@@ -137,6 +141,33 @@
 (if window-system
     (my-default-font)
   )
+
+
+(use-package diminish
+  :ensure t)
+
+;; 括号提示
+(use-package smartparens-config
+  :ensure smartparens
+  :diminish smartparens-mode
+  :config
+  (show-smartparens-global-mode t))
+
+(add-hook 'prog-mode-hook 'turn-on-smartparens-strict-mode)
+(add-hook 'markdown-mode-hook 'turn-on-smartparens-strict-mode)
+
+(use-package which-key
+  :ensure t
+  :diminish which-key-mode
+  :config
+  (which-key-mode +1))
+
+(use-package avy
+  :ensure t
+  :bind
+  ("C-=" . avy-goto-char)
+  :config
+  (setq avy-background t))
 
 ;;; evil config
 (use-package evil
@@ -181,19 +212,42 @@
   (define-key evil-visual-state-map (kbd "s-/") 'evilnc-comment-or-uncomment-lines)
 )
 
-;;; helm
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;项目配置
+(use-package projectile
+  :ensure t
+  :diminish projectile-mode
+  :bind
+  (("C-c p f" . helm-projectile-find-file)
+   ("C-c p p" . helm-projectile-switch-project)
+   ("C-c p s" . projectile-save-project-buffers))
+  :config
+  (projectile-mode +1)
+)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; helm
 (use-package helm
   :ensure t
-  :defines helm-buffers-fuzzy-matching helm-recentf-fuzzy-match helm-M-x-fuzzy-match
-  :bind (("M-x" . helm-M-x)
-	 ("C-x b" . helm-mini)
-	 ("C-x C-b" . helm-buffers-list)
-	 ("M-y" . helm-show-kill-ring)
-	 ("C-x C-f" . helm-find-files))
+  :defer 2
+  :bind
+  ("M-x" . helm-M-x)
+  ("C-x C-f" . helm-find-files)
+  ("M-y" . helm-show-kill-ring)
+  ("C-x b" . helm-mini)
   :config
+  (require 'helm-config)
+  (helm-mode 1)
+  (setq helm-split-window-inside-p t
+    helm-move-to-line-cycle-in-source t)
+  (setq helm-autoresize-max-height 0)
+  (setq helm-autoresize-min-height 20)
   (setq helm-buffers-fuzzy-matching t
 	helm-recentf-fuzzy-match t
 	helm-M-x-fuzzy-match t)
+  (helm-autoresize-mode 1)
+  (define-key helm-map (kbd "<tab>") 'helm-execute-persistent-action) ; rebind tab to run persistent action
+  (define-key helm-map (kbd "C-i") 'helm-execute-persistent-action) ; make TAB work in terminal
+  (define-key helm-map (kbd "C-z")  'helm-select-action) ; list actions using C-z
   )
 
 (use-package helm-rg
@@ -201,13 +255,11 @@
   :after helm
   :bind (("C-c k" . helm-rg)))
 
-;;; projectile
-;; (use-package projectile
-;;   :ensure t
-;;   :config
-;;   (define-key projectile-mode-map (kbd "s-p") 'projectile-command-map)
-;;   (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
-;;   (projectile-mode +1))
+(use-package helm-projectile
+  :ensure t
+  :config
+  (helm-projectile-on))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;; kubernetes
 (use-package kubernetes
@@ -222,6 +274,7 @@
 ;;   :ensure t
 ;;   :after kubernetes)
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;补全和语法检查
 ;;; lsp-mode
 (use-package lsp-mode
   :commands lsp)
@@ -232,6 +285,8 @@
 
 ;;; company
 (use-package company
+  :ensure t
+  :diminish company-mode
   :commands (global-company-mode)
   :config
   (global-company-mode)
@@ -239,9 +294,13 @@
 
 ;;; flycheck
 (use-package flycheck
+  :ensure t
+  :diminish flycheck-mode
   :commands (global-flycheck-mode)
   :init
   (add-hook 'after-init-hook #'global-flycheck-mode))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;; yaml-mode
 (use-package yaml-mode
@@ -363,9 +422,12 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(custom-safe-themes
+   (quote
+    ("84d2f9eeb3f82d619ca4bfffe5f157282f4779732f48a5ac1484d94d5ff5b279" default)))
  '(package-selected-packages
    (quote
-    (htmlize doom-modeline doom-themes dracula-theme solarized-theme kubernetes-evil python-mode yasnippet-snippets yaml-mode which-key web-mode use-package smartparens rainbow-delimiters pyenv-mode prettier-js php-mode moe-theme lua-mode lsp-ui lsp-rust lsp-javascript-typescript lsp-html lsp-css kubernetes-tramp kubernetes json-mode js2-refactor helm-rg helm-projectile go-mode flycheck exec-path-from-shell evil-surround evil-nerd-commenter evil-leader evil-escape emmet-mode diminish company-lsp auto-package-update anzu))))
+    (rich-minority smart-mode-line-powerline-theme smart-mode-line htmlize doom-modeline doom-themes dracula-theme solarized-theme kubernetes-evil python-mode yasnippet-snippets yaml-mode which-key web-mode use-package smartparens rainbow-delimiters pyenv-mode prettier-js php-mode moe-theme lua-mode lsp-ui lsp-rust lsp-javascript-typescript lsp-html lsp-css kubernetes-tramp kubernetes json-mode js2-refactor helm-rg helm-projectile go-mode flycheck exec-path-from-shell evil-surround evil-nerd-commenter evil-leader evil-escape emmet-mode diminish company-lsp auto-package-update anzu))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
