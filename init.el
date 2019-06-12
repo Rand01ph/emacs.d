@@ -221,8 +221,11 @@
    ("C-c p p" . helm-projectile-switch-project)
    ("C-c p s" . projectile-save-project-buffers))
   :config
+  (define-key projectile-mode-map (kbd "s-p") 'projectile-command-map)
+  (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
   (projectile-mode +1)
 )
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; helm
@@ -233,6 +236,9 @@
   ("M-x" . helm-M-x)
   ("C-x C-f" . helm-find-files)
   ("M-y" . helm-show-kill-ring)
+  ("C-x r b" . helm-bookmarks)
+  ("C-h a" . helm-apropos)
+  ("C-h d" . helm-info-at-point)
   ("C-x b" . helm-mini)
   :config
   (require 'helm-config)
@@ -259,6 +265,12 @@
   :ensure t
   :config
   (helm-projectile-on))
+
+(use-package treemacs
+  :bind
+  (("C-c t" . treemacs)
+   ("s-a" . treemacs)))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;; kubernetes
@@ -273,6 +285,23 @@
 ;; (use-package kubernetes-evil
 ;;   :ensure t
 ;;   :after kubernetes)
+
+
+(use-package hydra)
+
+(use-package ssh-deploy
+    :ensure t
+    :demand
+    :after hydra
+    :hook ((after-save . ssh-deploy-after-save)
+	    (find-file . ssh-deploy-find-file))
+    :config
+    (ssh-deploy-line-mode) ;; If you want mode-line feature
+    (ssh-deploy-add-menu) ;; If you want menu-bar feature
+    (ssh-deploy-hydra "C-c C-z") ;; If you want the hydra feature
+)
+
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;补全和语法检查
 ;; This is the main mode for LSP
@@ -325,7 +354,7 @@
 (add-hook 'lsp-ui-doc-frame-hook
 	  (lambda (frame _w)
 	    (set-face-attribute 'default frame
-		 :font "Inter"
+		 :font "Noto Sans CJK SC"
 		 :height 140)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -352,11 +381,21 @@
   (add-hook 'python-mode-hook #'subword-mode)
   )
 
+(defun pyenv-from-file ()
+  (let ((current-file (buffer-file-name))
+	(file-name ".python-version"))
+    (when current-file
+      (let* ((conf-dir (locate-dominating-file current-file file-name))
+	     (conf-file (concat conf-dir file-name)))
+	(pyenv-mode-set
+	 (string-trim (f-read conf-file)))))))
+
 (use-package pyvenv
   :ensure t
   :after python
   :config
-  (setenv "WORKON_HOME" (expand-file-name "~/.pyenv/versions"))
+  (setenv "WORKON_HOME" (expand-file-name "~/.pyenv/versions")
+  (add-hook 'python-mode-hook 'pyenv-from-file))
   )
 
 ;; golang environment
@@ -467,7 +506,7 @@
     ("84d2f9eeb3f82d619ca4bfffe5f157282f4779732f48a5ac1484d94d5ff5b279" default)))
  '(package-selected-packages
    (quote
-    (rich-minority smart-mode-line-powerline-theme smart-mode-line htmlize doom-modeline doom-themes dracula-theme solarized-theme kubernetes-evil python-mode yasnippet-snippets yaml-mode which-key web-mode use-package smartparens rainbow-delimiters pyenv-mode prettier-js php-mode moe-theme lua-mode lsp-ui lsp-rust lsp-javascript-typescript lsp-html lsp-css kubernetes-tramp kubernetes json-mode js2-refactor helm-rg helm-projectile go-mode flycheck exec-path-from-shell evil-surround evil-nerd-commenter evil-leader evil-escape emmet-mode diminish company-lsp auto-package-update anzu)))
+    (ssh-deploy treemacs rich-minority smart-mode-line-powerline-theme smart-mode-line htmlize doom-modeline doom-themes dracula-theme solarized-theme kubernetes-evil python-mode yasnippet-snippets yaml-mode which-key web-mode use-package smartparens rainbow-delimiters pyenv-mode prettier-js php-mode moe-theme lua-mode lsp-ui lsp-rust lsp-javascript-typescript lsp-html lsp-css kubernetes-tramp kubernetes json-mode js2-refactor helm-rg helm-projectile go-mode flycheck exec-path-from-shell evil-surround evil-nerd-commenter evil-leader evil-escape emmet-mode diminish company-lsp auto-package-update anzu)))
  '(safe-local-variable-values
    (quote
     ((ssh-deploy-on-explicit-save . t)
