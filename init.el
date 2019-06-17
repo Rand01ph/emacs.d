@@ -301,8 +301,6 @@
     (ssh-deploy-hydra "C-c C-z") ;; If you want the hydra feature
 )
 
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;补全和语法检查
 ;; This is the main mode for LSP
 (use-package lsp-mode
@@ -356,6 +354,19 @@
 	    (set-face-attribute 'default frame
 		 :font "Noto Sans CJK SC"
 		 :height 140)))
+
+  (use-package yasnippet                  ; Snippets
+    :ensure t
+    :config
+    (setq yas-verbosity 1)                      ; No need to be so verbose
+    (setq yas-wrap-around-region t)
+    (setq yas-snippet-dirs (append yas-snippet-dirs
+			       '("~/.emacs.d/snippets")))
+    (yas-reload-all)
+    (yas-global-mode))
+
+  (use-package yasnippet-snippets         ; Collection of snippets
+    :ensure t)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -423,6 +434,12 @@
   :mode (("\\.php" . php-mode)
 	 ("\\.phtml" . php-mode))
   :commands php-mode)
+
+(use-package phpcbf
+  :ensure t
+  :after php-mode
+  :config
+  (setq phpcbf-standard "PSR2"))
 
 ;; Org Mode
 (use-package htmlize
@@ -506,7 +523,7 @@
     ("84d2f9eeb3f82d619ca4bfffe5f157282f4779732f48a5ac1484d94d5ff5b279" default)))
  '(package-selected-packages
    (quote
-    (ssh-deploy treemacs rich-minority smart-mode-line-powerline-theme smart-mode-line htmlize doom-modeline doom-themes dracula-theme solarized-theme kubernetes-evil python-mode yasnippet-snippets yaml-mode which-key web-mode use-package smartparens rainbow-delimiters pyenv-mode prettier-js php-mode moe-theme lua-mode lsp-ui lsp-rust lsp-javascript-typescript lsp-html lsp-css kubernetes-tramp kubernetes json-mode js2-refactor helm-rg helm-projectile go-mode flycheck exec-path-from-shell evil-surround evil-nerd-commenter evil-leader evil-escape emmet-mode diminish company-lsp auto-package-update anzu)))
+    (phpcbf ssh-deploy treemacs rich-minority smart-mode-line-powerline-theme smart-mode-line htmlize doom-modeline doom-themes dracula-theme solarized-theme kubernetes-evil python-mode yasnippet-snippets yaml-mode which-key web-mode use-package smartparens rainbow-delimiters pyenv-mode prettier-js php-mode moe-theme lua-mode lsp-ui lsp-rust lsp-javascript-typescript lsp-html lsp-css kubernetes-tramp kubernetes json-mode js2-refactor helm-rg helm-projectile go-mode flycheck exec-path-from-shell evil-surround evil-nerd-commenter evil-leader evil-escape emmet-mode diminish company-lsp auto-package-update anzu)))
  '(safe-local-variable-values
    (quote
     ((ssh-deploy-on-explicit-save . t)
