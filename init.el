@@ -230,46 +230,37 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; helm
 (use-package helm
+  :diminish helm-mode
   :ensure t
-  :defer 2
-  :bind
-  ("M-x" . helm-M-x)
-  ("C-x C-f" . helm-find-files)
-  ("M-y" . helm-show-kill-ring)
-  ("C-x r b" . helm-bookmarks)
-  ("C-h a" . helm-apropos)
-  ("C-h d" . helm-info-at-point)
-  ("C-x b" . helm-mini)
+  :bind (("C-x C-f" . helm-find-files)
+	 ("M-x" . helm-M-x)
+	 ("C-x b" . helm-mini)
+	 ("C-x C-b" . helm-mini)
+	 ("M-y" . helm-show-kill-ring)
+	 :map helm-map
+	 ("<tab>" . helm-execute-persistent-action) ; Rebind TAB to expand
+	 ("C-i" . helm-execute-persistent-action) ; Make TAB work in CLI
+	 ("C-z" . helm-select-action)) ; List actions using C-z
   :config
-  (require 'helm-config)
-  (helm-mode 1)
-  (setq helm-split-window-inside-p t
-    helm-move-to-line-cycle-in-source t)
-  (setq helm-autoresize-max-height 0)
-  (setq helm-autoresize-min-height 20)
-  (setq helm-buffers-fuzzy-matching t
-	helm-recentf-fuzzy-match t
-	helm-M-x-fuzzy-match t)
-  (helm-autoresize-mode 1)
-  (define-key helm-map (kbd "<tab>") 'helm-execute-persistent-action) ; rebind tab to run persistent action
-  (define-key helm-map (kbd "C-i") 'helm-execute-persistent-action) ; make TAB work in terminal
-  (define-key helm-map (kbd "C-z")  'helm-select-action) ; list actions using C-z
-  )
-
-(use-package helm-rg
-  :ensure t
-  :after helm
-  :bind (("C-c k" . helm-rg)))
+  (progn
+    (setq-default helm-split-window-in-side-p t)
+    (helm-mode 1)))
 
 (use-package helm-projectile
   :ensure t
+  :bind (("C-x , p" . helm-projectile-switch-project)
+	 ("C-x , f" . helm-projectile-find-file)
+	 ("C-x , b" . projectile-ibuffer)
+	 ("C-x , i" . projectile-invalidate-cache)
+	 ("C-x , a" . helm-projectile-ag))
   :config
-  (helm-projectile-on))
+  (progn
+    (use-package helm-rg
+      :ensure t
+      :bind (("C-c k" . helm-rg)))
 
-(use-package treemacs
-  :bind
-  (("C-c t" . treemacs)
-   ("s-a" . treemacs)))
+    (projectile-mode)
+    (setq-default projectile-enable-caching t)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -286,15 +277,13 @@
 ;;   :ensure t
 ;;   :after kubernetes)
 
-
-(use-package hydra)
+(use-package hydra
+  :ensure t)
 
 (use-package ssh-deploy
     :ensure t
     :demand
     :after hydra
-    :hook ((after-save . ssh-deploy-after-save)
-	    (find-file . ssh-deploy-find-file))
     :config
     (ssh-deploy-line-mode) ;; If you want mode-line feature
     (ssh-deploy-add-menu) ;; If you want menu-bar feature
@@ -304,57 +293,56 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;补全和语法检查
 ;; This is the main mode for LSP
 (use-package lsp-mode
-  :init (setq lsp-prefer-flymake nil)
-  :ensure t)
+  :ensure t
+  :hook (python-mode . lsp)
+  :commands lsp
+  :custom
+  ;; debug
+  (lsp-print-io t)
+  (lsp-trace t)
+  (lsp-print-performance nil)
+  :init
+  (setq lsp-prefer-flymake nil))
 
-;; This makes imenu-lsp-minor-mode available. This minor mode
-;; will show a table of contents of methods, classes, variables.
-;; You can configure it to be on the left by using `configure`
-
-(add-hook 'lsp-after-open-hook 'lsp-enable-imenu)
-
-;; lsp-ui enables the fancy showing of documentation, error
-;; messages and type hints
 (use-package lsp-ui
   :ensure t
   :config
-  (setq lsp-ui-sideline-ignore-duplicate t)
-  (add-hook 'lsp-mode-hook 'lsp-ui-mode))
+  (setq lsp-ui-doc-max-height 20
+	    lsp-ui-doc-max-width 50
+	    lsp-ui-sideline-ignore-duplicate t
+	    lsp-ui-peek-always-show t))
 
 ;; company is the best autocompletion system for emacs (probably)
 ;; and this uses the language server to provide semantic completions
+(use-package company
+  :ensure t
+  :config
+  (setq company-minimum-prefix-length 1
+	    company-idle-delay 0
+	    company-tooltip-limit 10
+	    company-transformers nil
+	    company-show-numbers t
+	    )
+  (global-company-mode +1)
+  (push 'company-lsp company-backends))
 
 (use-package company-lsp
-  :commands company-lsp
-  :config
-  (push 'company-lsp company-backends))
-;; I use pyenv to handle my virtual environments, so when I enable
-;; pyenv in a Python buffer, it will trigger lsp. Otherwise, it
-;; will use the old systems (I think based on jedi)
-
-(add-hook 'pyenv-mode-hook 'lsp)
+  :ensure t
+  :commands (company-lsp)
+  )
 
 ;; Flycheck checks your code and helps show alerts from the linter
 (use-package flycheck
-  :init (global-flycheck-mode))
+  :ensure t
+  :diminish flycheck-mode
+  :config
+  (progn
+    (setq-default flycheck-phpcs-standard "PSR2")
+    (setq-default flycheck-php-phpcs-executable "/bin/phpcs")
 
-;; Show flake8 errors in lsp-ui
-(defun lsp-set-cfg ()
-  (let ((lsp-cfg `(:pyls (:configurationSources ("flake8")))))
-    (lsp--set-configuration lsp-cfg)))
+    (global-flycheck-mode)))
 
-;; Activate that after lsp has started
-(add-hook 'lsp-after-initialize-hook 'lsp-set-cfg)
-
-;; I like proper fonts for documentation, in this case I use the
-;; Inter font. High legibility, small size
-
-(add-hook 'lsp-ui-doc-frame-hook
-	  (lambda (frame _w)
-	    (set-face-attribute 'default frame
-		 :font "Noto Sans CJK SC"
-		 :height 140)))
-
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; snippets
   (use-package yasnippet                  ; Snippets
     :ensure t
     :config
@@ -386,41 +374,58 @@
   :mode (("\\.py\\'" . python-mode))
   :defer t
   :init
-  (setq python-indent 4)
-  :config
-  ;; PEP 8 compliant filling rules, 79 chars maximum
-  (add-hook 'python-mode-hook #'subword-mode)
-  )
+  (setq python-indent-offset 4))
 
-(defun pyenv-from-file ()
-  (let ((current-file (buffer-file-name))
-	(file-name ".python-version"))
-    (when current-file
-      (let* ((conf-dir (locate-dominating-file current-file file-name))
-	     (conf-file (concat conf-dir file-name)))
-	(pyenv-mode-set
-	 (string-trim (f-read conf-file)))))))
-
-(use-package pyvenv
+(use-package pyenv-mode
   :ensure t
-  :after python
+  :init
+  (add-to-list 'exec-path "~/.pyenv/shims")
+  (setenv "WORKON_HOME" "~/.pyenv/versions/")
   :config
-  (setenv "WORKON_HOME" (expand-file-name "~/.pyenv/versions")
-  (add-hook 'python-mode-hook 'pyenv-from-file))
-  )
+  (pyenv-mode)
+  :bind
+  ("C-x p e" . pyenv-activate-current-project))
+
+(defun pyenv-init()
+  (setq global-pyenv (replace-regexp-in-string "\n" "" (shell-command-to-string "pyenv global")))
+  (message (concat "Setting pyenv version to " global-pyenv))
+  (pyenv-mode-set global-pyenv)
+  (defvar pyenv-current-version nil global-pyenv))
+
+(defun pyenv-activate-current-project ()
+  "Automatically activates pyenv version if .python-version file exists."
+  (interactive)
+  (f-traverse-upwards
+   (lambda (path)
+     (message path)
+     (let ((pyenv-version-path (f-expand ".python-version" path)))
+       (if (f-exists? pyenv-version-path)
+	  (progn
+	    (setq pyenv-current-version (s-trim (f-read-text pyenv-version-path 'utf-8)))
+	    (pyenv-mode-set pyenv-current-version)
+	    (pyvenv-workon pyenv-current-version)
+	    (message (concat "Setting virtualenv to " pyenv-current-version))))))))
+
+(add-hook 'after-init-hook 'pyenv-init)
+(add-hook 'projectile-after-switch-project-hook 'pyenv-activate-current-project)
+
+(use-package lsp-python-ms
+  :ensure nil
+  :hook (python-mode . lsp)
+  :config
+  ;; for executable of language server, if it's not symlinked on your PATH
+  (setq lsp-python-ms-executable
+	"/usr/lib/microsoft-python-language-server/Microsoft.Python.LanguageServer.dll"))
 
 ;; golang environment
 (use-package go-mode
   :commands go-mode
   :mode (("\\.go?\\'" . go-mode))
   :defer t
-  :init
-  (add-hook 'go-mode-hook #'lsp)
   :config
   (setq indent-tabs-mode nil)
   (setq c-basic-offset 4)
-  (setq tab-width 4)
-  (add-hook 'before-save-hook 'lsp-format-buffer))
+  (setq tab-width 4))
 
 ;; lua environment
 (use-package lua-mode
@@ -430,16 +435,9 @@
 
 ;; PHP environment
 (use-package php-mode
-  :ensure t
-  :mode (("\\.php" . php-mode)
-	 ("\\.phtml" . php-mode))
-  :commands php-mode)
-
-(use-package phpcbf
-  :ensure t
-  :after php-mode
   :config
-  (setq phpcbf-standard "PSR2"))
+  (progn
+    (setq-default php-mode-coding-style 'psr2)))
 
 ;; Org Mode
 (use-package htmlize
@@ -521,14 +519,12 @@
  '(custom-safe-themes
    (quote
     ("84d2f9eeb3f82d619ca4bfffe5f157282f4779732f48a5ac1484d94d5ff5b279" default)))
+ '(lsp-print-io nil)
+ '(lsp-print-performance nil)
+ '(lsp-trace nil t)
  '(package-selected-packages
    (quote
-    (phpcbf ssh-deploy treemacs rich-minority smart-mode-line-powerline-theme smart-mode-line htmlize doom-modeline doom-themes dracula-theme solarized-theme kubernetes-evil python-mode yasnippet-snippets yaml-mode which-key web-mode use-package smartparens rainbow-delimiters pyenv-mode prettier-js php-mode moe-theme lua-mode lsp-ui lsp-rust lsp-javascript-typescript lsp-html lsp-css kubernetes-tramp kubernetes json-mode js2-refactor helm-rg helm-projectile go-mode flycheck exec-path-from-shell evil-surround evil-nerd-commenter evil-leader evil-escape emmet-mode diminish company-lsp auto-package-update anzu)))
- '(safe-local-variable-values
-   (quote
-    ((ssh-deploy-on-explicit-save . t)
-     (ssh-deploy-root-remote . "/ssh:root@ampil-dev:/opt/disk2/var/www/ampil")
-     (ssh-deploy-root-local . "/home/tan/Nsfocus/Projects/Ampil/trunk/api")))))
+    (ms-python company-box yasnippet-snippets yaml-mode which-key web-mode use-package treemacs ssh-deploy solarized-theme smartparens smart-mode-line-powerline-theme shrink-path rainbow-delimiters pyvenv python-mode pyenv-mode prettier-js phpcbf php-mode moe-theme lua-mode lsp-ui lsp-python-ms kubernetes-tramp kubernetes-evil json-mode js2-refactor htmlize helm-rg helm-projectile go-mode flycheck exec-path-from-shell evil-surround evil-nerd-commenter evil-leader evil-escape emmet-mode eldoc-eval dracula-theme doom-themes diminish company-lsp auto-package-update anzu))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
