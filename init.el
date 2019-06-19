@@ -294,7 +294,6 @@
 ;; This is the main mode for LSP
 (use-package lsp-mode
   :ensure t
-  :hook (python-mode . lsp)
   :commands lsp
   :custom
   ;; debug
@@ -410,12 +409,13 @@
 (add-hook 'projectile-after-switch-project-hook 'pyenv-activate-current-project)
 
 (use-package lsp-python-ms
+  :demand
   :ensure nil
   :hook (python-mode . lsp)
   :config
-  ;; for executable of language server, if it's not symlinked on your PATH
-  (setq lsp-python-ms-executable
-	"/usr/lib/microsoft-python-language-server/Microsoft.Python.LanguageServer.dll"))
+  ;; for dev build of language server
+  (setq lsp-python-ms-dir
+	(expand-file-name "~/Projects/python-language-server/output/bin/Release/")))
 
 ;; golang environment
 (use-package go-mode
