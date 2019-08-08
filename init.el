@@ -104,14 +104,18 @@
   (load-theme 'doom-one t)
   (doom-themes-visual-bell-config))
 
-(use-package smart-mode-line-powerline-theme
-  :ensure t)
-
 (use-package smart-mode-line
   :ensure t
   :config
-  (setq sml/theme 'powerline)
+  (setq sml/theme 'dark)
   (add-hook 'after-init-hook 'sml/setup))
+
+;; highlight
+(use-package highlight-indent-guides
+  :ensure t
+  :diminish
+  :hook (prog-mode . highlight-indent-guides-mode)
+  :init (setq highlight-indent-guides-method 'character))
 
 ;; 字体配置
 ;; M+ 1m    Noto Sans CJK SC
@@ -314,16 +318,26 @@
 ;; company is the best autocompletion system for emacs (probably)
 ;; and this uses the language server to provide semantic completions
 (use-package company
-  :ensure t
+  :commands (company-complete-common company-dabbrev)
   :config
+  (global-company-mode)
   (setq company-minimum-prefix-length 1
 	    company-idle-delay 0
 	    company-tooltip-limit 10
 	    company-transformers nil
 	    company-show-numbers t
 	    )
-  (global-company-mode +1)
-  (push 'company-lsp company-backends))
+  (push 'company-lsp company-backends)
+  ;; Keymap: hold Ctrl for Vim motion. Why?
+  ;; .. we're already holding Ctrl, allow navigation at the same time.
+  (define-key company-active-map (kbd "C-j") 'company-select-next-or-abort)
+  (define-key company-active-map (kbd "C-k") 'company-select-previous-or-abort)
+  (define-key company-active-map (kbd "C-l") 'company-complete-selection)
+  (define-key company-active-map (kbd "C-h") 'company-abort)
+  (define-key company-active-map (kbd "<C-return>") 'company-complete-selection)
+
+  (define-key company-search-map (kbd "C-j") 'company-select-next)
+  (define-key company-search-map (kbd "C-k") 'company-select-previous))
 
 (use-package company-lsp
   :ensure t
@@ -359,6 +373,7 @@
 
 ;;; yaml-mode
 (use-package yaml-mode
+  :ensure t
   :mode
   (("\\.yml$" . yaml-mode)
    ("\\.yaml$" . yaml-mode)))
@@ -409,13 +424,14 @@
 (add-hook 'projectile-after-switch-project-hook 'pyenv-activate-current-project)
 
 (use-package lsp-python-ms
-  :demand
-  :ensure nil
-  :hook (python-mode . lsp)
+  :defer t
+  :hook (python-mode . (lambda ()
+			 (require 'lsp-python-ms)
+			 (lsp)))
   :config
   ;; for dev build of language server
-  (setq lsp-python-ms-dir
-	(expand-file-name "~/Projects/python-language-server/output/bin/Release/")))
+  (setq lsp-python-ms-executable
+	(expand-file-name "~/Projects/python-language-server/output/bin/Release/Microsoft.Python.LanguageServer.LanguageServer")))
 
 ;; golang environment
 (use-package go-mode
@@ -438,6 +454,9 @@
   :config
   (progn
     (setq-default php-mode-coding-style 'psr2)))
+
+;; leetcode
+(require 'leetcode)
 
 ;; Org Mode
 (use-package htmlize
@@ -518,13 +537,14 @@
  ;; If there is more than one, they won't work right.
  '(custom-safe-themes
    (quote
-    ("84d2f9eeb3f82d619ca4bfffe5f157282f4779732f48a5ac1484d94d5ff5b279" default)))
- '(lsp-print-io nil)
+    ("3c83b3676d796422704082049fc38b6966bcad960f896669dfc21a7a37a748fa" "84d2f9eeb3f82d619ca4bfffe5f157282f4779732f48a5ac1484d94d5ff5b279" default)))
+ '(lsp-log-io t)
  '(lsp-print-performance nil)
  '(lsp-trace nil t)
  '(package-selected-packages
    (quote
-    (ms-python company-box yasnippet-snippets yaml-mode which-key web-mode use-package treemacs ssh-deploy solarized-theme smartparens smart-mode-line-powerline-theme shrink-path rainbow-delimiters pyvenv python-mode pyenv-mode prettier-js phpcbf php-mode moe-theme lua-mode lsp-ui lsp-python-ms kubernetes-tramp kubernetes-evil json-mode js2-refactor htmlize helm-rg helm-projectile go-mode flycheck exec-path-from-shell evil-surround evil-nerd-commenter evil-leader evil-escape emmet-mode eldoc-eval dracula-theme doom-themes diminish company-lsp auto-package-update anzu))))
+    (highlight-indent-guides request ms-python company-box yasnippet-snippets yaml-mode which-key web-mode use-package treemacs ssh-deploy solarized-theme smartparens smart-mode-line-powerline-theme shrink-path rainbow-delimiters pyvenv python-mode pyenv-mode prettier-js phpcbf php-mode moe-theme lua-mode lsp-ui lsp-python-ms kubernetes-tramp kubernetes-evil json-mode js2-refactor htmlize helm-rg helm-projectile go-mode flycheck exec-path-from-shell evil-surround evil-nerd-commenter evil-leader evil-escape emmet-mode eldoc-eval dracula-theme doom-themes diminish company-lsp auto-package-update anzu)))
+ '(safe-local-variable-values (quote ((encoding . utf-8)))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
