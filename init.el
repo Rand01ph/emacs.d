@@ -16,6 +16,18 @@
 (setq gc-cons-threshold (* 20 1024 1024))
 (setq large-file-warning-threshold 100000000)
 
+(defmacro k-time (&rest body)
+  "Measure and return the time it takes evaluating BODY."
+  `(let ((time (current-time)))
+     ,@body
+     (float-time (time-since time))))
+
+(defvar k-gc-timer
+  (run-with-idle-timer 15 t
+		       (lambda ()
+			 (message "Garbage Collector has run for %.06fsec"
+				  (k-time (garbage-collect))))))
+
 (prefer-coding-system 'utf-8)
 (set-default-coding-systems 'utf-8)
 (set-terminal-coding-system 'utf-8)
@@ -98,11 +110,15 @@
 (set-frame-parameter (selected-frame) 'alpha '(85 . 85))
 (add-to-list 'default-frame-alist '(alpha . (85 . 85)))
 
-(use-package doom-themes
+;; (use-package doom-themes
+;;   :ensure t
+;;   :config
+;;   (load-theme 'doom-one t)
+;;   (doom-themes-visual-bell-config))
+(use-package monokai-theme
   :ensure t
   :config
-  (load-theme 'doom-one t)
-  (doom-themes-visual-bell-config))
+  (load-theme 'monokai t))
 
 (use-package smart-mode-line
   :ensure t
@@ -157,14 +173,19 @@
   :config
   (show-smartparens-global-mode t))
 
-(add-hook 'prog-mode-hook 'turn-on-smartparens-strict-mode)
-(add-hook 'markdown-mode-hook 'turn-on-smartparens-strict-mode)
+(add-hook 'prog-mode-hook 'turn-on-smartparens-mode)
+(add-hook 'markdown-mode-hook 'turn-on-smartparens-mode)
 
 (use-package which-key
   :ensure t
   :diminish which-key-mode
   :config
   (which-key-mode +1))
+
+(use-package dired-subtree
+  :defer t
+  :bind (:map dired-mode-map
+	      ("TAB" . dired-subtree-cycle)))
 
 (use-package avy
   :ensure t
@@ -297,23 +318,49 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;补全和语法检查
 ;; This is the main mode for LSP
 (use-package lsp-mode
-  :ensure t
-  :commands lsp
-  :custom
-  ;; debug
-  (lsp-print-io t)
-  (lsp-trace t)
-  (lsp-print-performance nil)
+  ;; :diminish lsp-mode
+  :defer t
+  ;; :hook (prog-mode . lsp)
+  :hook (python-mode . lsp-deferred)
+	(go-mode . lsp-deferred)
+  :bind (:map lsp-mode-map
+	      ("C-c C-d" . lsp-describe-thing-at-point))
   :init
-  (setq lsp-prefer-flymake nil))
+  (setq lsp-auto-guess-root t)       ; Detect project root
+  ;; disable Yasnippet
+  (setq lsp-enable-snippet nil)
+  (setq lsp-prefer-flymake nil)      ; Use lsp-ui and flycheck
+  (setq flymake-fringe-indicator-position 'right-fringe)
+)
 
 (use-package lsp-ui
-  :ensure t
+  :defer t
+  :custom-face
+  (lsp-ui-doc-background ((t (:background nil))))
+  :bind (:map lsp-ui-mode-map
+	      ([remap xref-find-definitions] . lsp-ui-peek-find-definitions)
+	      ([remap xref-find-references] . lsp-ui-peek-find-references)
+	      ("C-c u" . lsp-ui-imenu))
+  :init (setq lsp-ui-doc-enable t
+	      lsp-ui-doc-use-webkit t
+	      lsp-ui-doc-include-signature t
+	      lsp-ui-doc-position 'top
+	      lsp-ui-doc-border (face-foreground 'default)
+
+	      ;; lsp-enable-snippet nil
+	      lsp-ui-sideline-enable nil
+	      ;; emacs26.2 经常陷入卡顿, set it to nil.
+	      lsp-use-native-json nil
+	      lsp-ui-sideline-ignore-duplicate t)
   :config
-  (setq lsp-ui-doc-max-height 20
-	    lsp-ui-doc-max-width 50
-	    lsp-ui-sideline-ignore-duplicate t
-	    lsp-ui-peek-always-show t))
+  ;; WORKAROUND Hide mode-line of the lsp-ui-imenu buffer
+  ;; https://github.com/emacs-lsp/lsp-ui/issues/243
+  (defadvice lsp-ui-imenu (after hide-lsp-ui-imenu-mode-line activate)
+    (setq mode-line-format nil)))
+
+(use-package company-lsp
+  :defer t
+  :init (setq company-lsp-cache-candidates 'auto))
 
 ;; company is the best autocompletion system for emacs (probably)
 ;; and this uses the language server to provide semantic completions
@@ -338,11 +385,6 @@
 
   (define-key company-search-map (kbd "C-j") 'company-select-next)
   (define-key company-search-map (kbd "C-k") 'company-select-previous))
-
-(use-package company-lsp
-  :ensure t
-  :commands (company-lsp)
-  )
 
 ;; Flycheck checks your code and helps show alerts from the linter
 (use-package flycheck
@@ -539,11 +581,12 @@
    (quote
     ("3c83b3676d796422704082049fc38b6966bcad960f896669dfc21a7a37a748fa" "84d2f9eeb3f82d619ca4bfffe5f157282f4779732f48a5ac1484d94d5ff5b279" default)))
  '(lsp-log-io t)
+ '(lsp-print-io t)
  '(lsp-print-performance nil)
  '(lsp-trace nil t)
  '(package-selected-packages
    (quote
-    (highlight-indent-guides request ms-python company-box yasnippet-snippets yaml-mode which-key web-mode use-package treemacs ssh-deploy solarized-theme smartparens smart-mode-line-powerline-theme shrink-path rainbow-delimiters pyvenv python-mode pyenv-mode prettier-js phpcbf php-mode moe-theme lua-mode lsp-ui lsp-python-ms kubernetes-tramp kubernetes-evil json-mode js2-refactor htmlize helm-rg helm-projectile go-mode flycheck exec-path-from-shell evil-surround evil-nerd-commenter evil-leader evil-escape emmet-mode eldoc-eval dracula-theme doom-themes diminish company-lsp auto-package-update anzu)))
+    (monokai-theme dired-subtree highlight-indent-guides request ms-python company-box yasnippet-snippets yaml-mode which-key web-mode use-package treemacs ssh-deploy solarized-theme smartparens smart-mode-line-powerline-theme shrink-path rainbow-delimiters pyvenv python-mode pyenv-mode prettier-js phpcbf php-mode moe-theme lua-mode lsp-ui lsp-python-ms kubernetes-tramp kubernetes-evil json-mode js2-refactor htmlize helm-rg helm-projectile go-mode flycheck exec-path-from-shell evil-surround evil-nerd-commenter evil-leader evil-escape emmet-mode eldoc-eval dracula-theme doom-themes diminish company-lsp auto-package-update anzu)))
  '(safe-local-variable-values (quote ((encoding . utf-8)))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
