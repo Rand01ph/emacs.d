@@ -1,6 +1,6 @@
 ;;; init.el --- Rand01ph's Emacs configurations.  -*- lexical-binding: t; no-byte-compile: nil; -*-
 
-;; Version: 0.0.2
+;; Version: 0.0.3
 
 ;;; Commentary:
 ;; Emacs 配置,缓慢进化中
@@ -11,7 +11,7 @@
 
 ;;; Basic Setup
 (setq user-full-name "Rand01ph"
-      user-mail-address "tanyawei1991@gmail.com")
+	  user-mail-address "tanyawei1991@gmail.com")
 
 ;;; 定时GC
 (setq gc-cons-threshold (* 20 1024 1024))
@@ -20,12 +20,12 @@
 (defmacro k-time (&rest body)
   "Measure and return the time it takes evaluating BODY."
   `(let ((time (current-time)))
-     ,@body
-     (float-time (time-since time))))
+	 ,@body
+	 (float-time (time-since time))))
 
 (defvar k-gc-timer
   (run-with-idle-timer 15 t
-		       (lambda ()
+			   (lambda ()
 			 (message "Garbage Collector has run for %.06fsec"
 				  (k-time (garbage-collect))))))
 
@@ -39,7 +39,7 @@
 (require 'package)
 (setq package-enable-at-startup nil)
 (setq package-archives
-      '(("gnu"   . "http://elpa.emacs-china.org/gnu/")
+	  '(("gnu"   . "http://elpa.emacs-china.org/gnu/")
 	("melpa" . "http://elpa.emacs-china.org/melpa/")
 	("org"   . "http://elpa.emacs-china.org/org/")))
 (package-initialize)
@@ -48,8 +48,8 @@
 ;; ensure that use-package is installed
 (unless (package-installed-p 'use-package)
   (progn
-    (package-refresh-contents)
-    (package-install 'use-package)))
+	(package-refresh-contents)
+	(package-install 'use-package)))
 
 ;; Should set before loading `use-package'
 (defvar use-package-always-ensure t)
@@ -85,18 +85,31 @@
 (dolist (hook '(python-mode-hook prog-mode-hook list-mode-hook))
   (add-hook hook (lambda () (set-fill-column 120))))
 
+;; 搜索高亮
+(use-package anzu
+	:config
+	(global-anzu-mode +1)
+	(global-set-key [remap query-replace] 'anzu-query-replace)
+	(global-set-key [remap query-replace-regexp] 'anzu-query-replace-regexp))
+
+;; 开启列号
+(setq column-number-mode 1)
+
+;; 停止光标闪烁
+(blink-cursor-mode -1)
+
 ;; Auto-save and Backups
 ;; (setq auto-save-default nil)
 (setq auto-save-file-name-transforms
-    `((".*" ,temporary-file-directory t)))
+	`((".*" ,temporary-file-directory t)))
 (setq make-backup-files t
-    version-control t
-    backup-by-copying t
-    kept-old-versions 2
-    kept-new-versions 5
-    delete-old-versions t)
+	version-control t
+	backup-by-copying t
+	kept-old-versions 2
+	kept-new-versions 5
+	delete-old-versions t)
 (setq backup-directory-alist
-    `((".*" . ,temporary-file-directory)))
+	`((".*" . ,temporary-file-directory)))
 
 (add-hook 'before-save-hook 'whitespace-cleanup)
 
@@ -114,6 +127,14 @@
 (if (fboundp 'menu-bar-mode) (menu-bar-mode -1))
 (if (fboundp 'tool-bar-mode) (tool-bar-mode -1))
 (if (fboundp 'scroll-bar-mode) (scroll-bar-mode -1))
+(set-window-scroll-bars (minibuffer-window) nil nil)
+
+;; 在window中使用完整单文件路径名称
+(setq frame-title-format
+	  '((:eval (if (buffer-file-name)
+				   (abbreviate-file-name (buffer-file-name))
+				 "%b"))))
+
 
 ;; 背景透明
 ;;(set-frame-parameter (selected-frame) 'alpha '(<active> . <inactive>))
@@ -126,51 +147,77 @@
 ;;   :config
 ;;   (load-theme 'doom-one t)
 ;;   (doom-themes-visual-bell-config))
-(use-package monokai-theme
-  :ensure t
-  :config
-  (load-theme 'monokai t))
+;; (use-package monokai-theme
+;;   :ensure t
+;;   :config
+;;   (load-theme 'monokai t))
 
-(use-package smart-mode-line
-  :ensure t
-  :config
-  (setq sml/theme 'dark)
-  (add-hook 'after-init-hook 'sml/setup))
+(use-package zenburn-theme
+	:config
+	(load-theme 'zenburn t)
+	(let ((line (face-attribute 'mode-line :underline)))
+		(set-face-attribute 'mode-line          nil :overline   line)
+		(set-face-attribute 'mode-line-inactive nil :overline   line)
+		(set-face-attribute 'mode-line-inactive nil :underline  line)
+		(set-face-attribute 'mode-line          nil :box        nil)
+		(set-face-attribute 'mode-line-inactive nil :box        nil)
+		(set-face-attribute 'mode-line-inactive nil :background "#f9f2d9")))
 
-;; highlight
+;; Use moody for the mode bar
+(use-package moody
+	:config
+	(setq x-underline-at-descent-line t)
+	(moody-replace-mode-line-buffer-identification)
+	(moody-replace-vc-mode))
+
+;; 隐藏minor modes
+(use-package minions
+  :config
+  (setq minions-mode-line-lighter ""
+		minions-mode-line-delimiters '("" . ""))
+  (minions-mode 1))
+
+;; 界面高亮配置
+(global-hl-line-mode)
+
 (use-package highlight-indent-guides
   :ensure t
   :diminish
   :hook (prog-mode . highlight-indent-guides-mode)
   :init (setq highlight-indent-guides-method 'character))
 
+;; 高亮未提交代码
+(use-package diff-hl
+	:config
+	(add-hook 'prog-mode-hook 'turn-on-diff-hl-mode))
+
+
 ;; 字体配置
-;; M+ 1m    Noto Sans CJK SC
 (defun my-default-font()
   "Config my font."
   (interactive)
   (defvar my-fonts
-    (cond ((eq system-type 'darwin)     '("Monaco"           "STHeiti"))
-	  ((eq system-type 'gnu/linux)  '("M+ 1m"            "Noto Sans CJK SC"))
+	(cond ((eq system-type 'darwin)     '("Monaco"           "STHeiti"))
+	  ((eq system-type 'gnu/linux)  '("Hack"            "Noto Sans CJK SC"))
 	  ((eq system-type 'windows-nt) '("DejaVu Sans Mono" "Microsoft Yahei"))))
   (set-face-attribute 'default nil :font
-		      (format "%s:pixelsize=%d" (car my-fonts) 14))
+			  (format "%s:pixelsize=%d" (car my-fonts) 30))
   (dolist (charset '(kana han symbol cjk-misc bopomofo))
-    (set-fontset-font (frame-parameter nil 'font) charset
-		      (font-spec :family (car (cdr my-fonts)) :size 12)))
+	(set-fontset-font (frame-parameter nil 'font) charset
+			  (font-spec :family (car (cdr my-fonts)) :size 24)))
   ;; Fix chinese font width and rescale
   (setq face-font-rescale-alist '(("STHeiti" . 1.2) ("STFangsong" . 1.2) ("Microsoft Yahei" . 1.2) ("Noto Sans CJK SC" . 1.2)))
   )
 
 (add-to-list 'after-make-frame-functions
-	     (lambda (new-frame)
-	       (select-frame new-frame)
-	       (if window-system
+		 (lambda (new-frame)
+		   (select-frame new-frame)
+		   (if window-system
 		   (my-default-font)
 		 )))
 
 (if window-system
-    (my-default-font)
+	(my-default-font)
   )
 
 
@@ -196,7 +243,10 @@
 (use-package dired-subtree
   :defer t
   :bind (:map dired-mode-map
-	      ("TAB" . dired-subtree-cycle)))
+		  ("TAB" . dired-subtree-cycle)))
+
+;; Dired
+(setq dired-listing-switches "-AlShr")
 
 (use-package avy
   :ensure t
@@ -205,6 +255,7 @@
   :config
   (setq avy-background t))
 
+;; Evil
 ;;; evil config
 (use-package evil
   :ensure t
@@ -218,25 +269,17 @@
   :after evil ;; 表示在evil载入后才能载入
   :config
   (progn
-    (setq-default evil-escape-key-sequence "kj")
-    (setq-default evil-escape-delay 0.2)
-    (evil-escape-mode t)
-    ))
-
-(use-package evil-leader
-  :ensure t
-  :after evil
-  :commands (evil-leader/set-leader)
-  :config
-  (global-evil-leader-mode)
-  (evil-leader/set-leader "<SPC>"))
+	(setq-default evil-escape-key-sequence "kj")
+	(setq-default evil-escape-delay 0.2)
+	(evil-escape-mode t)
+	))
 
 (use-package evil-surround
   :ensure t
   :config
   (progn
-    (global-evil-surround-mode t)
-    ))
+	(global-evil-surround-mode t)
+	))
 
 (use-package evil-nerd-commenter
   :after evil
@@ -247,6 +290,12 @@
   (define-key evil-normal-state-map (kbd "s-/") 'evilnc-comment-or-uncomment-lines)
   (define-key evil-visual-state-map (kbd "s-/") 'evilnc-comment-or-uncomment-lines)
 )
+
+(use-package evil-visualstar
+		:config
+		(global-evil-visualstar-mode)
+		(setq evil-visualstar/persistent nil))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;项目配置
 (use-package projectile
@@ -272,6 +321,8 @@
 	 ("M-x" . helm-M-x)
 	 ("C-x b" . helm-mini)
 	 ("C-x C-b" . helm-mini)
+	 ("C-x C-a" . helm-apropos)
+	 ("C-x C-o" . helm-occur)
 	 ("M-y" . helm-show-kill-ring)
 	 :map helm-map
 	 ("<tab>" . helm-execute-persistent-action) ; Rebind TAB to expand
@@ -279,8 +330,8 @@
 	 ("C-z" . helm-select-action)) ; List actions using C-z
   :config
   (progn
-    (setq-default helm-split-window-in-side-p t)
-    (helm-mode 1)))
+	(setq-default helm-split-window-in-side-p t)
+	(helm-mode 1)))
 
 (use-package helm-projectile
   :ensure t
@@ -291,12 +342,12 @@
 	 ("C-x , a" . helm-projectile-ag))
   :config
   (progn
-    (use-package helm-rg
-      :ensure t
-      :bind (("C-c k" . helm-rg)))
+	(use-package helm-rg
+	  :ensure t
+	  :bind (("C-c k" . helm-rg)))
 
-    (projectile-mode)
-    (setq-default projectile-enable-caching t)))
+	(projectile-mode)
+	(setq-default projectile-enable-caching t)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -317,13 +368,13 @@
   :ensure t)
 
 (use-package ssh-deploy
-    :ensure t
-    :demand
-    :after hydra
-    :config
-    (ssh-deploy-line-mode) ;; If you want mode-line feature
-    (ssh-deploy-add-menu) ;; If you want menu-bar feature
-    (ssh-deploy-hydra "C-c C-z") ;; If you want the hydra feature
+	:ensure t
+	:demand
+	:after hydra
+	:config
+	(ssh-deploy-line-mode) ;; If you want mode-line feature
+	(ssh-deploy-add-menu) ;; If you want menu-bar feature
+	(ssh-deploy-hydra "C-c C-z") ;; If you want the hydra feature
 )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;补全和语法检查
@@ -335,7 +386,7 @@
   :hook (python-mode . lsp-deferred)
 	(go-mode . lsp-deferred)
   :bind (:map lsp-mode-map
-	      ("C-c C-d" . lsp-describe-thing-at-point))
+		  ("C-c C-d" . lsp-describe-thing-at-point))
   :init
   (setq lsp-auto-guess-root t)       ; Detect project root
   ;; disable Yasnippet
@@ -349,25 +400,25 @@
   :custom-face
   (lsp-ui-doc-background ((t (:background nil))))
   :bind (:map lsp-ui-mode-map
-	      ([remap xref-find-definitions] . lsp-ui-peek-find-definitions)
-	      ([remap xref-find-references] . lsp-ui-peek-find-references)
-	      ("C-c u" . lsp-ui-imenu))
+		  ([remap xref-find-definitions] . lsp-ui-peek-find-definitions)
+		  ([remap xref-find-references] . lsp-ui-peek-find-references)
+		  ("C-c u" . lsp-ui-imenu))
   :init (setq lsp-ui-doc-enable t
-	      lsp-ui-doc-use-webkit t
-	      lsp-ui-doc-include-signature t
-	      lsp-ui-doc-position 'top
-	      lsp-ui-doc-border (face-foreground 'default)
+		  lsp-ui-doc-use-webkit t
+		  lsp-ui-doc-include-signature t
+		  lsp-ui-doc-position 'top
+		  lsp-ui-doc-border (face-foreground 'default)
 
-	      ;; lsp-enable-snippet nil
-	      lsp-ui-sideline-enable nil
-	      ;; emacs26.2 经常陷入卡顿, set it to nil.
-	      lsp-use-native-json nil
-	      lsp-ui-sideline-ignore-duplicate t)
+		  ;; lsp-enable-snippet nil
+		  lsp-ui-sideline-enable nil
+		  ;; emacs26.2 经常陷入卡顿, set it to nil.
+		  lsp-use-native-json nil
+		  lsp-ui-sideline-ignore-duplicate t)
   :config
   ;; WORKAROUND Hide mode-line of the lsp-ui-imenu buffer
   ;; https://github.com/emacs-lsp/lsp-ui/issues/243
   (defadvice lsp-ui-imenu (after hide-lsp-ui-imenu-mode-line activate)
-    (setq mode-line-format nil)))
+	(setq mode-line-format nil)))
 
 (use-package company-lsp
   :defer t
@@ -380,11 +431,11 @@
   :config
   (global-company-mode)
   (setq company-minimum-prefix-length 1
-	    company-idle-delay 0
-	    company-tooltip-limit 10
-	    company-transformers nil
-	    company-show-numbers t
-	    )
+		company-idle-delay 0
+		company-tooltip-limit 10
+		company-transformers nil
+		company-show-numbers t
+		)
   (push 'company-lsp company-backends)
   ;; Keymap: hold Ctrl for Vim motion. Why?
   ;; .. we're already holding Ctrl, allow navigation at the same time.
@@ -403,24 +454,24 @@
   :diminish flycheck-mode
   :config
   (progn
-    (setq-default flycheck-phpcs-standard "PSR2")
-    (setq-default flycheck-php-phpcs-executable "/bin/phpcs")
+	(setq-default flycheck-phpcs-standard "PSR2")
+	(setq-default flycheck-php-phpcs-executable "/bin/phpcs")
 
-    (global-flycheck-mode)))
+	(global-flycheck-mode)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; snippets
   (use-package yasnippet                  ; Snippets
-    :ensure t
-    :config
-    (setq yas-verbosity 1)                      ; No need to be so verbose
-    (setq yas-wrap-around-region t)
-    (setq yas-snippet-dirs (append yas-snippet-dirs
-			       '("~/.emacs.d/snippets")))
-    (yas-reload-all)
-    (yas-global-mode))
+	:ensure t
+	:config
+	(setq yas-verbosity 1)                      ; No need to be so verbose
+	(setq yas-wrap-around-region t)
+	(setq yas-snippet-dirs (append yas-snippet-dirs
+				   '("~/.emacs.d/snippets")))
+	(yas-reload-all)
+	(yas-global-mode))
 
   (use-package yasnippet-snippets         ; Collection of snippets
-    :ensure t)
+	:ensure t)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -464,14 +515,14 @@
   (interactive)
   (f-traverse-upwards
    (lambda (path)
-     (message path)
-     (let ((pyenv-version-path (f-expand ".python-version" path)))
-       (if (f-exists? pyenv-version-path)
+	 (message path)
+	 (let ((pyenv-version-path (f-expand ".python-version" path)))
+	   (if (f-exists? pyenv-version-path)
 	  (progn
-	    (setq pyenv-current-version (s-trim (f-read-text pyenv-version-path 'utf-8)))
-	    (pyenv-mode-set pyenv-current-version)
-	    (pyvenv-workon pyenv-current-version)
-	    (message (concat "Setting virtualenv to " pyenv-current-version))))))))
+		(setq pyenv-current-version (s-trim (f-read-text pyenv-version-path 'utf-8)))
+		(pyenv-mode-set pyenv-current-version)
+		(pyvenv-workon pyenv-current-version)
+		(message (concat "Setting virtualenv to " pyenv-current-version))))))))
 
 (add-hook 'after-init-hook 'pyenv-init)
 (add-hook 'projectile-after-switch-project-hook 'pyenv-activate-current-project)
@@ -506,10 +557,8 @@
 (use-package php-mode
   :config
   (progn
-    (setq-default php-mode-coding-style 'psr2)))
+	(setq-default php-mode-coding-style 'psr2)))
 
-;; leetcode
-(require 'leetcode)
 
 ;; Org Mode
 (use-package htmlize
@@ -519,15 +568,17 @@
   :defines org-publish-project-alist
   :functions org-publish-find-date org-publish-sitemap-default-entry
   :config
-  (defun rk/org-publish-sitemap-time-entry (entry style project)
-    "My org sitemap entry with time ENTRY STYLE PROJECT rk short for 9r0k."
-    (format "%s %s"
-	    (format-time-string
-	     "[%Y-%m-%d]"
-	     (org-publish-find-date entry project))
-	    (org-publish-sitemap-default-entry entry style project)))
   ;;; orgmode 下源码高亮
   (setq org-src-fontify-natively t)
+  (setq org-ellipsis "⤵")
+  (setq org-src-tab-acts-natively t)
+  (defun rk/org-publish-sitemap-time-entry (entry style project)
+	"My org sitemap entry with time ENTRY STYLE PROJECT rk short for 9r0k."
+	(format "%s %s"
+		(format-time-string
+		 "[%Y-%m-%d]"
+		 (org-publish-find-date entry project))
+		(org-publish-sitemap-default-entry entry style project)))
   (setq org-publish-project-alist
 	'(
 	  ("blog"
@@ -581,6 +632,18 @@
 	   :recursive t
 	   :publishing-function (org-publish-attachment)))))
 
+(use-package org-bullets
+	:init
+	(add-hook 'org-mode-hook 'org-bullets-mode))
+
+(org-babel-do-load-languages
+ 'org-babel-load-languages '((C . t)
+							 (python . t)
+							 (emacs-lisp . t)
+							 (shell . t)))
+
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; init.el ends here
 (custom-set-variables
@@ -590,18 +653,18 @@
  ;; If there is more than one, they won't work right.
  '(custom-safe-themes
    (quote
-    ("3c83b3676d796422704082049fc38b6966bcad960f896669dfc21a7a37a748fa" "84d2f9eeb3f82d619ca4bfffe5f157282f4779732f48a5ac1484d94d5ff5b279" default)))
+	("3c83b3676d796422704082049fc38b6966bcad960f896669dfc21a7a37a748fa" "84d2f9eeb3f82d619ca4bfffe5f157282f4779732f48a5ac1484d94d5ff5b279" default)))
  '(lsp-log-io t)
  '(lsp-print-io t)
  '(lsp-print-performance nil)
  '(lsp-trace nil t)
  '(package-selected-packages
    (quote
-    (monokai-theme dired-subtree highlight-indent-guides request ms-python company-box yasnippet-snippets yaml-mode which-key web-mode use-package treemacs ssh-deploy solarized-theme smartparens smart-mode-line-powerline-theme shrink-path rainbow-delimiters pyvenv python-mode pyenv-mode prettier-js phpcbf php-mode moe-theme lua-mode lsp-ui lsp-python-ms kubernetes-tramp kubernetes-evil json-mode js2-refactor htmlize helm-rg helm-projectile go-mode flycheck exec-path-from-shell evil-surround evil-nerd-commenter evil-leader evil-escape emmet-mode eldoc-eval dracula-theme doom-themes diminish company-lsp auto-package-update anzu)))
+	(moody evil-visualstar monokai-theme dired-subtree highlight-indent-guides request ms-python company-box yasnippet-snippets yaml-mode which-key web-mode use-package treemacs ssh-deploy solarized-theme smartparens smart-mode-line-powerline-theme shrink-path rainbow-delimiters pyvenv python-mode pyenv-mode prettier-js phpcbf php-mode moe-theme lua-mode lsp-ui lsp-python-ms kubernetes-tramp kubernetes-evil json-mode js2-refactor htmlize helm-rg helm-projectile go-mode flycheck exec-path-from-shell evil-surround evil-nerd-commenter evil-leader evil-escape emmet-mode eldoc-eval dracula-theme doom-themes diminish company-lsp auto-package-update anzu)))
  '(safe-local-variable-values (quote ((encoding . utf-8)))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- )
+ '(lsp-ui-doc-background ((t (:background nil)))))
