@@ -13,6 +13,7 @@
 (setq user-full-name "Rand01ph"
       user-mail-address "tanyawei1991@gmail.com")
 
+;;; 定时GC
 (setq gc-cons-threshold (* 20 1024 1024))
 (setq large-file-warning-threshold 100000000)
 
@@ -28,12 +29,13 @@
 			 (message "Garbage Collector has run for %.06fsec"
 				  (k-time (garbage-collect))))))
 
+;;; 编码配置
 (prefer-coding-system 'utf-8)
 (set-default-coding-systems 'utf-8)
 (set-terminal-coding-system 'utf-8)
 (set-keyboard-coding-system 'utf-8)
 
-;;; config package manager
+;;; 配置 package.el 源
 (require 'package)
 (setq package-enable-at-startup nil)
 (setq package-archives
@@ -65,14 +67,23 @@
 (defconst *is-console* (not *is-gui*))
 
 ;; 开启内置行号
-(when (version<= "26.0.50" emacs-version )
+(when (version<= "26.0.50" emacs-version)
   (global-display-line-numbers-mode))
 
 ;; common
 (setq create-lockfiles nil)
 (fset 'yes-or-no-p 'y-or-n-p)
 
+;; 设置tab宽度
+(setq-default tab-width 4)
+
 (setq ring-bell-function 'ignore)	; No bell please
+
+;; 设置行宽度，文本120，程序120
+(dolist (hook '(text-mode-hook latex-mode-hook tex-mode-hook))
+  (add-hook hook (lambda () (set-fill-column 120))))
+(dolist (hook '(python-mode-hook prog-mode-hook list-mode-hook))
+  (add-hook hook (lambda () (set-fill-column 120))))
 
 ;; Auto-save and Backups
 ;; (setq auto-save-default nil)
