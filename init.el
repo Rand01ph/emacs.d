@@ -197,14 +197,16 @@
   "Config my font."
   (interactive)
   (defvar my-fonts
-	(cond ((eq system-type 'darwin)     '("Monaco"           "STHeiti"))
-	  ((eq system-type 'gnu/linux)  '("Hack"            "Noto Sans CJK SC"))
-	  ((eq system-type 'windows-nt) '("DejaVu Sans Mono" "Microsoft Yahei"))))
+	(cond ((eq system-type 'darwin) '("Monaco" "STHeiti"))
+		  ((eq system-type 'gnu/linux) '("Noto Sans Mono" "Noto Sans CJK SC"))
+		  ((eq system-type 'windows-nt) '("DejaVu Sans Mono" "Microsoft Yahei"))))
   (set-face-attribute 'default nil :font
-			  (format "%s:pixelsize=%d" (car my-fonts) 30))
+					  (format "%s:pixelsize=%d" (car my-fonts) (if (> (nth 4 (assq 'geometry (car (display-monitor-attributes-list))))
+																	  2000) 30 18)))
   (dolist (charset '(kana han symbol cjk-misc bopomofo))
 	(set-fontset-font (frame-parameter nil 'font) charset
-			  (font-spec :family (car (cdr my-fonts)) :size 24)))
+					  (font-spec :family (car (cdr my-fonts)) :size (if (> (nth 4 (assq 'geometry (car (display-monitor-attributes-list))))
+																		   2000) 30 18))))
   ;; Fix chinese font width and rescale
   (setq face-font-rescale-alist '(("STHeiti" . 1.2) ("STFangsong" . 1.2) ("Microsoft Yahei" . 1.2) ("Noto Sans CJK SC" . 1.2)))
   )
