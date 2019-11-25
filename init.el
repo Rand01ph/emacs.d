@@ -236,12 +236,6 @@
 (add-hook 'prog-mode-hook 'turn-on-smartparens-mode)
 (add-hook 'markdown-mode-hook 'turn-on-smartparens-mode)
 
-(use-package which-key
-  :ensure t
-  :diminish which-key-mode
-  :config
-  (which-key-mode +1))
-
 (use-package dired-subtree
   :defer t
   :bind (:map dired-mode-map
@@ -330,10 +324,63 @@
 	 ("<tab>" . helm-execute-persistent-action) ; Rebind TAB to expand
 	 ("C-i" . helm-execute-persistent-action) ; Make TAB work in CLI
 	 ("C-z" . helm-select-action)) ; List actions using C-z
+  :init
+  (setq helm-M-x-fuzzy-match t
+  helm-mode-fuzzy-match t
+  helm-buffers-fuzzy-matching t
+  helm-recentf-fuzzy-match t
+  helm-locate-fuzzy-match t
+  helm-semantic-fuzzy-match t
+  helm-imenu-fuzzy-match t
+  helm-completion-in-region-fuzzy-match t
+  helm-candidate-number-list 150
+  helm-split-window-in-side-p t
+  helm-move-to-line-cycle-in-source t
+  helm-echo-input-in-header-line t
+  helm-autoresize-max-height 0
+  helm-autoresize-min-height 20)
   :config
   (progn
 	(setq-default helm-split-window-in-side-p t)
 	(helm-mode 1)))
+
+;; Which Key
+(use-package which-key
+  :ensure t
+  :diminish which-key-mode
+  :init
+  (setq which-key-separator " ")
+  (setq which-key-prefix-prefix "+")
+  :config
+  (which-key-mode 1))
+
+;; Custom keybinding
+(use-package general
+  :ensure t
+  :config (general-define-key
+  :states '(normal visual insert emacs)
+  :prefix "SPC"
+  :non-normal-prefix "M-SPC"
+  "/"   '(helm-projectile-rg :which-key "ripgrep")
+  "TAB" '(switch-to-prev-buffer :which-key "previous buffer")
+  "SPC" '(helm-M-x :which-key "M-x")
+  "pf"  '(helm-projectile-find-file :which-key "find files")
+  "pp"  '(helm-projectile-switch-project :which-key "switch project")
+  "pb"  '(helm-projectile-switch-to-buffer :which-key "switch buffer")
+  "pr"  '(helm-show-kill-ring :which-key "show kill ring")
+  ;; Buffers
+  "bb"  '(helm-buffers-list :which-key "buffers list")
+  ;; Window
+  "wl"  '(windmove-right :which-key "move right")
+  "wh"  '(windmove-left :which-key "move left")
+  "wk"  '(windmove-up :which-key "move up")
+  "wj"  '(windmove-down :which-key "move bottom")
+  "w/"  '(split-window-right :which-key "split right")
+  "w-"  '(split-window-below :which-key "split bottom")
+  "wx"  '(delete-window :which-key "delete window")
+  ;; Others
+  "at"  '(ansi-term :which-key "open terminal")
+))
 
 (use-package helm-projectile
   :ensure t
@@ -662,7 +709,7 @@
  '(lsp-trace nil t)
  '(package-selected-packages
    (quote
-	(moody evil-visualstar monokai-theme dired-subtree highlight-indent-guides request ms-python company-box yasnippet-snippets yaml-mode which-key web-mode use-package treemacs ssh-deploy solarized-theme smartparens smart-mode-line-powerline-theme shrink-path rainbow-delimiters pyvenv python-mode pyenv-mode prettier-js phpcbf php-mode moe-theme lua-mode lsp-ui lsp-python-ms kubernetes-tramp kubernetes-evil json-mode js2-refactor htmlize helm-rg helm-projectile go-mode flycheck exec-path-from-shell evil-surround evil-nerd-commenter evil-leader evil-escape emmet-mode eldoc-eval dracula-theme doom-themes diminish company-lsp auto-package-update anzu)))
+	(general moody evil-visualstar monokai-theme dired-subtree highlight-indent-guides request ms-python company-box yasnippet-snippets yaml-mode which-key web-mode use-package treemacs ssh-deploy solarized-theme smartparens smart-mode-line-powerline-theme shrink-path rainbow-delimiters pyvenv python-mode pyenv-mode prettier-js phpcbf php-mode moe-theme lua-mode lsp-ui lsp-python-ms kubernetes-tramp kubernetes-evil json-mode js2-refactor htmlize helm-rg helm-projectile go-mode flycheck exec-path-from-shell evil-surround evil-nerd-commenter evil-leader evil-escape emmet-mode eldoc-eval dracula-theme doom-themes diminish company-lsp auto-package-update anzu)))
  '(safe-local-variable-values (quote ((encoding . utf-8)))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
