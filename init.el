@@ -202,11 +202,11 @@
 		  ((eq system-type 'windows-nt) '("DejaVu Sans Mono" "Microsoft Yahei"))))
   (set-face-attribute 'default nil :font
 					  (format "%s:pixelsize=%d" (car my-fonts) (if (> (nth 4 (assq 'geometry (car (display-monitor-attributes-list))))
-																	  2000) 30 18)))
+																	  2000) 28 18)))
   (dolist (charset '(kana han symbol cjk-misc bopomofo))
 	(set-fontset-font (frame-parameter nil 'font) charset
 					  (font-spec :family (car (cdr my-fonts)) :size (if (> (nth 4 (assq 'geometry (car (display-monitor-attributes-list))))
-																		   2000) 30 18))))
+																		   2000) 26 18))))
   ;; Fix chinese font width and rescale
   (setq face-font-rescale-alist '(("STHeiti" . 1.2) ("STFangsong" . 1.2) ("Microsoft Yahei" . 1.2) ("Noto Sans CJK SC" . 1.2)))
   )
@@ -389,14 +389,22 @@
 	 ("C-x , b" . projectile-ibuffer)
 	 ("C-x , i" . projectile-invalidate-cache)
 	 ("C-x , a" . helm-projectile-ag))
+  :init
+  (setq helm-projectile-fuzzy-match t)
   :config
   (progn
 	(use-package helm-rg
 	  :ensure t
 	  :bind (("C-c k" . helm-rg)))
-
 	(projectile-mode)
 	(setq-default projectile-enable-caching t)))
+
+;; Fancy titlebar for MacOS
+(add-to-list 'default-frame-alist '(ns-transparent-titlebar . t))
+(add-to-list 'default-frame-alist '(ns-appearance . dark))
+(setq ns-use-proxy-icon  nil)
+(setq frame-title-format nil)
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -432,10 +440,11 @@
   ;; :diminish lsp-mode
   :defer t
   ;; :hook (prog-mode . lsp)
-  :hook (python-mode . lsp-deferred)
-	(go-mode . lsp-deferred)
+  :hook
+  (python-mode . lsp-deferred)
+  (go-mode . lsp-deferred)
   :bind (:map lsp-mode-map
-		  ("C-c C-d" . lsp-describe-thing-at-point))
+			  ("C-c C-d" . lsp-describe-thing-at-point))
   :init
   (setq lsp-auto-guess-root t)       ; Detect project root
   ;; disable Yasnippet
@@ -457,7 +466,6 @@
 		  lsp-ui-doc-include-signature t
 		  lsp-ui-doc-position 'top
 		  lsp-ui-doc-border (face-foreground 'default)
-
 		  ;; lsp-enable-snippet nil
 		  lsp-ui-sideline-enable nil
 		  ;; emacs26.2 经常陷入卡顿, set it to nil.
@@ -468,10 +476,6 @@
   ;; https://github.com/emacs-lsp/lsp-ui/issues/243
   (defadvice lsp-ui-imenu (after hide-lsp-ui-imenu-mode-line activate)
 	(setq mode-line-format nil)))
-
-(use-package company-lsp
-  :defer t
-  :init (setq company-lsp-cache-candidates 'auto))
 
 ;; company is the best autocompletion system for emacs (probably)
 ;; and this uses the language server to provide semantic completions
@@ -493,9 +497,18 @@
   (define-key company-active-map (kbd "C-l") 'company-complete-selection)
   (define-key company-active-map (kbd "C-h") 'company-abort)
   (define-key company-active-map (kbd "<C-return>") 'company-complete-selection)
-
   (define-key company-search-map (kbd "C-j") 'company-select-next)
   (define-key company-search-map (kbd "C-k") 'company-select-previous))
+
+;; Lsp completion
+(use-package company-lsp
+  :ensure t
+  :defer t
+  :custom
+  (company-lsp-cache-candidates t) ;; auto, t(always using a cache), or nil
+  (company-lsp-async t)
+  (company-lsp-enable-snippet t)
+  (company-lsp-enable-recompletion t))
 
 ;; Flycheck checks your code and helps show alerts from the linter
 (use-package flycheck
@@ -505,22 +518,22 @@
   (progn
 	(setq-default flycheck-phpcs-standard "PSR2")
 	(setq-default flycheck-php-phpcs-executable "/bin/phpcs")
-
 	(global-flycheck-mode)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; snippets
-  (use-package yasnippet                  ; Snippets
-	:ensure t
-	:config
-	(setq yas-verbosity 1)                      ; No need to be so verbose
-	(setq yas-wrap-around-region t)
-	(setq yas-snippet-dirs (append yas-snippet-dirs
-				   '("~/.emacs.d/snippets")))
-	(yas-reload-all)
-	(yas-global-mode))
+(use-package yasnippet                  ; Snippets
+  :ensure t
+  :commands yas-minor-mode
+  :hook (go-mode . yas-minor-mode)
+  :config
+  (setq yas-verbosity 1)                      ; No need to be so verbose
+  (setq yas-wrap-around-region t)
+  (setq yas-snippet-dirs (append yas-snippet-dirs
+								 '("~/.emacs.d/snippets")))
+  (yas-reload-all))
 
-  (use-package yasnippet-snippets         ; Collection of snippets
-	:ensure t)
+(use-package yasnippet-snippets         ; Collection of snippets
+  :ensure t)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -536,7 +549,6 @@
   :mode ("\\.json\\'" . json-mode))
 
 ;; python
-;; pip install "python-language-server[all]" bpython mypy flake8
 (use-package python
   :mode (("\\.py\\'" . python-mode))
   :defer t
@@ -588,13 +600,22 @@
 
 ;; golang environment
 (use-package go-mode
-  :commands go-mode
-  :mode (("\\.go?\\'" . go-mode))
   :defer t
+  :mode (("\\.go?\\'" . go-mode))
+  :custom (gofmt-command "goimports")
+  :bind (:map go-mode-map
+		 ("C-c C-n" . go-run)
+		 ("C-c ."   . go-test-current-test)
+		 ("C-c f"   . go-test-current-file)
+		 ("C-c a"   . go-test-current-project))
   :config
   (setq indent-tabs-mode nil)
   (setq c-basic-offset 4)
-  (setq tab-width 4))
+  (setq tab-width 4)
+  (add-hook 'before-save-hook #'gofmt-before-save)
+  (use-package gotest)
+  (use-package go-tag
+	:config (setq go-tag-args (list "-transform" "camelcase"))))
 
 ;; lua environment
 (use-package lua-mode
@@ -709,7 +730,7 @@
  '(lsp-trace nil t)
  '(package-selected-packages
    (quote
-	(general moody evil-visualstar monokai-theme dired-subtree highlight-indent-guides request ms-python company-box yasnippet-snippets yaml-mode which-key web-mode use-package treemacs ssh-deploy solarized-theme smartparens smart-mode-line-powerline-theme shrink-path rainbow-delimiters pyvenv python-mode pyenv-mode prettier-js phpcbf php-mode moe-theme lua-mode lsp-ui lsp-python-ms kubernetes-tramp kubernetes-evil json-mode js2-refactor htmlize helm-rg helm-projectile go-mode flycheck exec-path-from-shell evil-surround evil-nerd-commenter evil-leader evil-escape emmet-mode eldoc-eval dracula-theme doom-themes diminish company-lsp auto-package-update anzu)))
+	(go-tag gotest neotree general moody evil-visualstar monokai-theme dired-subtree highlight-indent-guides request ms-python company-box yasnippet-snippets yaml-mode which-key web-mode use-package treemacs ssh-deploy solarized-theme smartparens smart-mode-line-powerline-theme shrink-path rainbow-delimiters pyvenv python-mode pyenv-mode prettier-js phpcbf php-mode moe-theme lua-mode lsp-ui lsp-python-ms kubernetes-tramp kubernetes-evil json-mode js2-refactor htmlize helm-rg helm-projectile go-mode flycheck exec-path-from-shell evil-surround evil-nerd-commenter evil-leader evil-escape emmet-mode eldoc-eval dracula-theme doom-themes diminish company-lsp auto-package-update anzu)))
  '(safe-local-variable-values (quote ((encoding . utf-8)))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
