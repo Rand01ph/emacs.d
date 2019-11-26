@@ -202,11 +202,11 @@
 		  ((eq system-type 'windows-nt) '("DejaVu Sans Mono" "Microsoft Yahei"))))
   (set-face-attribute 'default nil :font
 					  (format "%s:pixelsize=%d" (car my-fonts) (if (> (nth 4 (assq 'geometry (car (display-monitor-attributes-list))))
-																	  2000) 30 18)))
+																	  2000) 30 14)))
   (dolist (charset '(kana han symbol cjk-misc bopomofo))
 	(set-fontset-font (frame-parameter nil 'font) charset
 					  (font-spec :family (car (cdr my-fonts)) :size (if (> (nth 4 (assq 'geometry (car (display-monitor-attributes-list))))
-																		   2000) 30 18))))
+																		   2000) 30 13))))
   ;; Fix chinese font width and rescale
   (setq face-font-rescale-alist '(("STHeiti" . 1.2) ("STFangsong" . 1.2) ("Microsoft Yahei" . 1.2) ("Noto Sans CJK SC" . 1.2)))
   )
@@ -413,19 +413,6 @@
 ;;   :ensure t
 ;;   :after kubernetes)
 
-(use-package hydra
-  :ensure t)
-
-(use-package ssh-deploy
-	:ensure t
-	:demand
-	:after hydra
-	:config
-	(ssh-deploy-line-mode) ;; If you want mode-line feature
-	(ssh-deploy-add-menu) ;; If you want menu-bar feature
-	(ssh-deploy-hydra "C-c C-z") ;; If you want the hydra feature
-)
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;补全和语法检查
 ;; This is the main mode for LSP
 (use-package lsp-mode
@@ -529,7 +516,19 @@
   :ensure t
   :mode
   (("\\.yml$" . yaml-mode)
-   ("\\.yaml$" . yaml-mode)))
+   ("\\.yaml$" . yaml-mode))
+  :config
+  (use-package ansible
+	:config
+	(use-package company-ansible)
+	(add-to-list 'company-backends 'company-ansible)
+	(add-hook 'ansible-hook 'ansible::auto-decrypt-encrypt))
+  (add-hook 'yaml-mode-hook '(lambda () (ansible 1))))
+
+;;; jinja2-mode
+(use-package jinja2-mode
+	:mode ("\\.j2\\'" . jinja2-mode)
+	:defer t)
 
 ;;; json-mode
 (use-package json-mode
@@ -709,7 +708,7 @@
  '(lsp-trace nil t)
  '(package-selected-packages
    (quote
-	(general moody evil-visualstar monokai-theme dired-subtree highlight-indent-guides request ms-python company-box yasnippet-snippets yaml-mode which-key web-mode use-package treemacs ssh-deploy solarized-theme smartparens smart-mode-line-powerline-theme shrink-path rainbow-delimiters pyvenv python-mode pyenv-mode prettier-js phpcbf php-mode moe-theme lua-mode lsp-ui lsp-python-ms kubernetes-tramp kubernetes-evil json-mode js2-refactor htmlize helm-rg helm-projectile go-mode flycheck exec-path-from-shell evil-surround evil-nerd-commenter evil-leader evil-escape emmet-mode eldoc-eval dracula-theme doom-themes diminish company-lsp auto-package-update anzu)))
+	(company-ansible ansible jinja2-mode general moody evil-visualstar monokai-theme dired-subtree highlight-indent-guides request ms-python company-box yasnippet-snippets yaml-mode which-key web-mode use-package treemacs ssh-deploy solarized-theme smartparens smart-mode-line-powerline-theme shrink-path rainbow-delimiters pyvenv python-mode pyenv-mode prettier-js phpcbf php-mode moe-theme lua-mode lsp-ui lsp-python-ms kubernetes-tramp kubernetes-evil json-mode js2-refactor htmlize helm-rg helm-projectile go-mode flycheck exec-path-from-shell evil-surround evil-nerd-commenter evil-leader evil-escape emmet-mode eldoc-eval dracula-theme doom-themes diminish company-lsp auto-package-update anzu)))
  '(safe-local-variable-values (quote ((encoding . utf-8)))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
