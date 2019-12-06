@@ -39,9 +39,9 @@
 (require 'package)
 (setq package-enable-at-startup nil)
 (setq package-archives
-	  '(("gnu"   . "http://elpa.emacs-china.org/gnu/")
-	("melpa" . "http://elpa.emacs-china.org/melpa/")
-	("org"   . "http://elpa.emacs-china.org/org/")))
+	  '(("gnu"   . "https://mirrors.cloud.tencent.com/elpa/gnu/")
+		("melpa" . "https://mirrors.cloud.tencent.com/elpa/melpa/")
+		("org"   . "https://mirrors.cloud.tencent.com/elpa/org/")))
 (package-initialize)
 
 ;; bootstrap use-package
@@ -56,6 +56,12 @@
 
 (eval-when-compile
   (require 'use-package))
+
+(use-package auto-package-update
+  :config
+  (setq auto-package-update-delete-old-versions t)
+  (setq auto-package-update-hide-results t)
+  (auto-package-update-maybe))
 
 (add-to-list 'load-path (expand-file-name "elisp" user-emacs-directory))
 
@@ -419,54 +425,23 @@
   :after kubernetes)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;补全和语法检查
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;Programming Languages
+
+;;; ############ lsp #################
+
 ;; This is the main mode for LSP
 (use-package lsp-mode
-  ;; :diminish lsp-mode
-  :defer t
-  ;; :hook (prog-mode . lsp)
-  :hook
-  (python-mode . lsp-deferred)
-  (go-mode . lsp-deferred)
-  :bind (:map lsp-mode-map
-			  ("C-c C-d" . lsp-describe-thing-at-point))
-  :init
-  (setq lsp-auto-guess-root t)       ; Detect project root
-  ;; disable Yasnippet
-  (setq lsp-enable-snippet nil)
-  (setq lsp-prefer-flymake nil)      ; Use lsp-ui and flycheck
-  (setq flymake-fringe-indicator-position 'right-fringe)
-)
+  :defer t)
 
-(use-package lsp-ui
-  :defer t
-  :custom-face
-  (lsp-ui-doc-background ((t (:background nil))))
-  :bind (:map lsp-ui-mode-map
-		  ([remap xref-find-definitions] . lsp-ui-peek-find-definitions)
-		  ([remap xref-find-references] . lsp-ui-peek-find-references)
-		  ("C-c u" . lsp-ui-imenu))
-  :init (setq lsp-ui-doc-enable t
-		  lsp-ui-doc-use-webkit t
-		  lsp-ui-doc-include-signature t
-		  lsp-ui-doc-position 'top
-		  lsp-ui-doc-border (face-foreground 'default)
-		  ;; lsp-enable-snippet nil
-		  lsp-ui-sideline-enable nil
-		  ;; emacs26.2 经常陷入卡顿, set it to nil.
-		  lsp-use-native-json nil
-		  lsp-ui-sideline-ignore-duplicate t)
-  :config
-  ;; WORKAROUND Hide mode-line of the lsp-ui-imenu buffer
-  ;; https://github.com/emacs-lsp/lsp-ui/issues/243
-  (defadvice lsp-ui-imenu (after hide-lsp-ui-imenu-mode-line activate)
-	(setq mode-line-format nil)))
+
+;;; ############ company #################
 
 ;; company is the best autocompletion system for emacs (probably)
 ;; and this uses the language server to provide semantic completions
 (use-package company
   :commands (company-complete-common company-dabbrev)
   :config
-  (global-company-mode)
+  (add-hook 'after-init-hook 'global-company-mode)
   (setq company-minimum-prefix-length 1
 		company-idle-delay 0
 		company-tooltip-limit 10
@@ -488,11 +463,86 @@
 (use-package company-lsp
   :ensure t
   :defer t
+  :commands company-lsp
   :custom
-  (company-lsp-cache-candidates t) ;; auto, t(always using a cache), or nil
+  (company-lsp-cache-candidates 'auto)
   (company-lsp-async t)
-  (company-lsp-enable-snippet t)
-  (company-lsp-enable-recompletion t))
+  (company-lsp-enable-snippet t))
+
+;;; ############ Go #################
+;;; [go-mode]: https://github.com/dominikh/go-mode.el
+
+(use-package go-guru
+  :defer)
+
+(use-package go-mode
+  :defer t
+  :mode (("\\.go?\\'" . go-mode))
+  :custom (gofmt-command "goimports")
+  :bind (:map go-mode-map
+			  ("C-c d" . lsp-describe-thing-at-point)
+			  ("C-i" . company-indent-or-complete-common))
+  :config
+  (require 'go-guru)
+  (add-hook 'go-mode-hook #'lsp)
+  (add-hook 'go-mode-hook #'smartparens-mode)
+  (add-hook 'before-save-hook #'lsp-format-buffer)
+  (add-hook 'before-save-hook #'lsp-organize-imports))
+
+
+;;; ############ Python #################
+
+(use-package lsp-python-ms
+  :ensure t
+  :defer t
+  :hook (python-mode . (lambda ()
+						 (pyenv-activate-current-project)
+						 (require 'lsp-python-ms)
+						 (lsp)))
+  :config
+  ;; for dev build of language server
+  (setq lsp-python-ms-executable
+		"/home/tan/Projects/python-language-server/output/bin/Release/linux-x64/publish/Microsoft.Python.LanguageServer"))
+
+(use-package python
+  :mode (("\\.py\\'" . python-mode))
+  :defer t
+  :init
+  (setq python-indent-offset 4))
+
+(use-package pyenv-mode
+  :ensure t
+  :init
+  (add-to-list 'exec-path "~/.pyenv/shims")
+  (setenv "WORKON_HOME" "~/.pyenv/versions/")
+  :config
+  (pyenv-mode)
+  :bind
+  ("C-x p e" . pyenv-activate-current-project))
+
+(defun pyenv-init()
+  (setq global-pyenv (replace-regexp-in-string "\n" "" (shell-command-to-string "pyenv global")))
+  (message (concat "Setting pyenv version to " global-pyenv))
+  (pyenv-mode-set global-pyenv)
+  (defvar pyenv-current-version nil global-pyenv))
+
+(defun pyenv-activate-current-project()
+  "Automatically activates pyenv version if .python-version file exists."
+  (interactive)
+  (f-traverse-upwards
+   (lambda (path)
+	 (message path)
+	 (let ((pyenv-version-path (f-expand ".python-version" path)))
+	   (if (f-exists? pyenv-version-path)
+	  (progn
+		(setq pyenv-current-version (s-trim (f-read-text pyenv-version-path 'utf-8)))
+		(pyenv-mode-set pyenv-current-version)
+		(pyvenv-workon pyenv-current-version)
+		(message (concat "Setting virtualenv to " pyenv-current-version))))))))
+
+(add-hook 'after-init-hook 'pyenv-init)
+(add-hook 'projectile-after-switch-project-hook 'pyenv-activate-current-project)
+
 
 ;; Flycheck checks your code and helps show alerts from the linter
 (use-package flycheck
@@ -548,74 +598,6 @@
 (use-package jsonnet-mode
   :mode ("\\.jsonnet\\'" . jsonnet-mode))
 
-;; python
-(use-package python
-  :mode (("\\.py\\'" . python-mode))
-  :defer t
-  :init
-  (setq python-indent-offset 4))
-
-(use-package pyenv-mode
-  :ensure t
-  :init
-  (add-to-list 'exec-path "~/.pyenv/shims")
-  (setenv "WORKON_HOME" "~/.pyenv/versions/")
-  :config
-  (pyenv-mode)
-  :bind
-  ("C-x p e" . pyenv-activate-current-project))
-
-(defun pyenv-init()
-  (setq global-pyenv (replace-regexp-in-string "\n" "" (shell-command-to-string "pyenv global")))
-  (message (concat "Setting pyenv version to " global-pyenv))
-  (pyenv-mode-set global-pyenv)
-  (defvar pyenv-current-version nil global-pyenv))
-
-(defun pyenv-activate-current-project ()
-  "Automatically activates pyenv version if .python-version file exists."
-  (interactive)
-  (f-traverse-upwards
-   (lambda (path)
-	 (message path)
-	 (let ((pyenv-version-path (f-expand ".python-version" path)))
-	   (if (f-exists? pyenv-version-path)
-	  (progn
-		(setq pyenv-current-version (s-trim (f-read-text pyenv-version-path 'utf-8)))
-		(pyenv-mode-set pyenv-current-version)
-		(pyvenv-workon pyenv-current-version)
-		(message (concat "Setting virtualenv to " pyenv-current-version))))))))
-
-(add-hook 'after-init-hook 'pyenv-init)
-(add-hook 'projectile-after-switch-project-hook 'pyenv-activate-current-project)
-
-(use-package lsp-python-ms
-  :defer t
-  :hook (python-mode . (lambda ()
-			 (require 'lsp-python-ms)
-			 (lsp)))
-  :config
-  ;; for dev build of language server
-  (setq lsp-python-ms-executable
-	(expand-file-name "~/Projects/python-language-server/output/bin/Release/Microsoft.Python.LanguageServer.LanguageServer")))
-
-;; golang environment
-(use-package go-mode
-  :defer t
-  :mode (("\\.go?\\'" . go-mode))
-  :custom (gofmt-command "goimports")
-  :bind (:map go-mode-map
-		 ("C-c C-n" . go-run)
-		 ("C-c ."   . go-test-current-test)
-		 ("C-c f"   . go-test-current-file)
-		 ("C-c a"   . go-test-current-project))
-  :config
-  (setq indent-tabs-mode nil)
-  (setq c-basic-offset 4)
-  (setq tab-width 4)
-  (add-hook 'before-save-hook #'gofmt-before-save)
-  (use-package gotest)
-  (use-package go-tag
-	:config (setq go-tag-args (list "-transform" "camelcase"))))
 
 ;; lua environment
 (use-package lua-mode
@@ -730,7 +712,7 @@
  '(lsp-trace nil t)
  '(package-selected-packages
    (quote
-	(jsonnet-mode go-tag gotest neotree general moody evil-visualstar monokai-theme dired-subtree highlight-indent-guides request ms-python company-box yasnippet-snippets yaml-mode which-key web-mode use-package treemacs ssh-deploy solarized-theme smartparens smart-mode-line-powerline-theme shrink-path rainbow-delimiters pyvenv python-mode pyenv-mode prettier-js phpcbf php-mode moe-theme lua-mode lsp-ui lsp-python-ms kubernetes-tramp kubernetes-evil json-mode js2-refactor htmlize helm-rg helm-projectile go-mode flycheck exec-path-from-shell evil-surround evil-nerd-commenter evil-leader evil-escape emmet-mode eldoc-eval dracula-theme doom-themes diminish company-lsp auto-package-update anzu)))
+	(go-guru jsonnet-mode go-tag gotest neotree general moody evil-visualstar monokai-theme dired-subtree highlight-indent-guides request ms-python company-box yasnippet-snippets yaml-mode which-key web-mode use-package treemacs ssh-deploy solarized-theme smartparens smart-mode-line-powerline-theme shrink-path rainbow-delimiters pyvenv python-mode pyenv-mode prettier-js phpcbf php-mode moe-theme lua-mode lsp-ui lsp-python-ms kubernetes-tramp kubernetes-evil json-mode js2-refactor htmlize helm-rg helm-projectile go-mode flycheck exec-path-from-shell evil-surround evil-nerd-commenter evil-leader evil-escape emmet-mode eldoc-eval dracula-theme doom-themes diminish company-lsp auto-package-update anzu)))
  '(safe-local-variable-values (quote ((encoding . utf-8)))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
