@@ -412,6 +412,17 @@
 (setq frame-title-format nil)
 
 
+;; https://github.com/akermu/emacs-libvterm
+(use-package vterm
+  :load-path  "/home/tan/Projects/emacs-libvterm/"
+  :config
+  (add-hook 'vterm-mode-hook
+			(lambda()
+			  (setq-local evil-insert-state-cursor 'box)
+			  (evil-insert-state)))
+  (define-key vterm-mode-map [return] #'vterm-send-return)
+)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;; kubernetes
