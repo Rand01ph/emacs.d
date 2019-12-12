@@ -91,6 +91,11 @@
 (dolist (hook '(python-mode-hook prog-mode-hook list-mode-hook))
   (add-hook hook (lambda () (set-fill-column 120))))
 
+;; 核心模块
+;; files and directories
+(use-package f
+  :ensure t)
+
 ;; 搜索高亮
 (use-package anzu
 	:config
@@ -190,7 +195,7 @@
   :ensure t
   :diminish
   :hook (prog-mode . highlight-indent-guides-mode)
-  :init (setq highlight-indent-guides-method 'character))
+  :init (setq highlight-indent-guides-method 'column))
 
 ;; 高亮未提交代码
 (use-package diff-hl
@@ -232,15 +237,6 @@
 (use-package diminish
   :ensure t)
 
-;; 括号提示
-(use-package smartparens-config
-  :ensure smartparens
-  :diminish smartparens-mode
-  :config
-  (show-smartparens-global-mode t))
-
-(add-hook 'prog-mode-hook 'turn-on-smartparens-mode)
-(add-hook 'markdown-mode-hook 'turn-on-smartparens-mode)
 
 (use-package dired-subtree
   :defer t
@@ -264,6 +260,7 @@
   :init
   (setq evil-want-C-u-scroll t)
   :config
+  (define-key evil-normal-state-map (kbd "s-T") 'vterm)
   (evil-mode 1))
 
 (use-package evil-escape
@@ -384,8 +381,10 @@
   "w/"  '(split-window-right :which-key "split right")
   "w-"  '(split-window-below :which-key "split bottom")
   "wx"  '(delete-window :which-key "delete window")
+  ;; flycheck
+  "el" '(flycheck-list-errors :which-key "errors (flycheck)")
   ;; Others
-  "at"  '(ansi-term :which-key "open terminal")
+  "vt"  '(vterm-other-window :which-key "open vterm window")
 ))
 
 (use-package helm-projectile
@@ -452,54 +451,108 @@
   :ensure t
   :after kubernetes)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;补全和语法检查
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;Programming Languages
+;;;;;;;;;;;;;;;;;;;; 开发相关配置
 
-;;; ############ lsp #################
+;; 括号提示
+(use-package smartparens-config
+  :ensure smartparens
+  :diminish smartparens-mode
+  :hook ((prog-mode . smartparens-mode)
+		 (markdown-mode . smartparens-mode))
+  :config
+  (show-smartparens-global-mode t))
 
-;; This is the main mode for LSP
-(use-package lsp-mode
+(use-package rainbow-delimiters
   :ensure t
   :defer t
-  :config
-  (setq lsp-auto-configure nil)
-  (setq lsp-prefer-flymake nil))
+  :hook (prog-mode . rainbow-delimiters-mode))
 
+;; 错误检查
+
+;; Flycheck checks your code and helps show alerts from the linter
+(use-package flycheck
+  :ensure t
+  :defer t
+  :diminish flycheck-mode
+  :hook (prog-mode . flycheck-mode)
+  :config
+  (progn
+	(setq-default flycheck-phpcs-standard "PSR2")
+	(setq-default flycheck-php-phpcs-executable "/bin/phpcs")))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;补全和语法检查
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;Programming Languages
 
 ;;; ############ company #################
 
 ;; company is the best autocompletion system for emacs (probably)
 ;; and this uses the language server to provide semantic completions
 (use-package company
+  :ensure t
   :commands (company-complete-common company-dabbrev)
+  :bind
+  (:map company-active-map
+		("C-n" . company-select-next)
+		("C-p" . company-select-previous)
+		("<tab>" . company-complete-common))
+  :hook (prog-mode . company-mode)
   :config
-  (add-hook 'after-init-hook 'global-company-mode)
   (setq company-minimum-prefix-length 1
-		company-idle-delay 0
+		company-idle-delay 0.3
 		company-tooltip-limit 10
 		company-transformers nil
 		company-show-numbers t
-		)
-  (push 'company-lsp company-backends)
-  ;; Keymap: hold Ctrl for Vim motion. Why?
-  ;; .. we're already holding Ctrl, allow navigation at the same time.
-  (define-key company-active-map (kbd "C-j") 'company-select-next-or-abort)
-  (define-key company-active-map (kbd "C-k") 'company-select-previous-or-abort)
-  (define-key company-active-map (kbd "C-l") 'company-complete-selection)
-  (define-key company-active-map (kbd "C-h") 'company-abort)
-  (define-key company-active-map (kbd "<C-return>") 'company-complete-selection)
-  (define-key company-search-map (kbd "C-j") 'company-select-next)
-  (define-key company-search-map (kbd "C-k") 'company-select-previous))
+		))
 
-;; Lsp completion
-(use-package company-lsp
+;; company-prescient: Simple but effective sorting and filtering for Emacs.
+;; https://github.com/raxod502/prescient.el/tree/master
+(use-package company-prescient
+  :hook (company-mode . company-prescient-mode)
+  :config (prescient-persist-mode +1))
+
+
+;;; ############ lsp #################
+
+;; This is the main mode for LSP
+;; https://github.com/emacs-lsp/lsp-mode
+(use-package lsp-mode
   :ensure t
   :defer t
+  :config
+  (setq lsp-prefer-flymake nil
+		;; for debugging, see `*lsp-log*' buffer
+		lsp-log-io t
+		lsp-print-performance t)
+  (add-hook 'prog-mode-hook #'lsp-deferred))
+
+
+;; Lsp completion
+;; https://github.com/tigersoldier/company-lsp
+(use-package company-lsp
+  :ensure t
+  :requires company
+  :defer t
   :commands company-lsp
+  :config
+  (push 'company-lsp company-backends)
   :custom
   (company-lsp-cache-candidates 'auto)
   (company-lsp-async t)
   (company-lsp-enable-snippet t))
+
+;; https://github.com/emacs-lsp/lsp-ui
+(use-package lsp-ui
+  :ensure t
+  :after (lsp-mode flycheck)
+  :config
+  (define-key lsp-ui-mode-map [remap xref-find-definitions] #'lsp-ui-peek-find-definitions)
+  (define-key lsp-ui-mode-map [remap xref-find-references] #'lsp-ui-peek-find-references)
+  (setq lsp-ui-sideline-enable nil
+		lsp-ui-doc-enable nil
+		lsp-ui-flycheck-enable t
+		lsp-ui-imenu-enable t
+		lsp-ui-sideline-ignore-duplicate t))
 
 ;;; ############ Go #################
 ;;; [go-mode]: https://github.com/dominikh/go-mode.el
@@ -523,32 +576,34 @@
 
 
 ;;; ############ Python #################
-
-(use-package lsp-python-ms
-  :ensure t
-  :defer t
-  :hook (python-mode . (lambda ()
-						 (pyenv-activate-current-project)
-						 (require 'lsp-python-ms)
-						 (lsp)))
-  :config
-  ;; for dev build of language server
-  (setq lsp-python-ms-executable
-		"/home/tan/Projects/python-language-server/output/bin/Release/linux-x64/publish/Microsoft.Python.LanguageServer"))
+;;; https://github.com/swaroopch/rangoli-emacs/blob/master/features/rangoli-python.el
+;;; https://github.com/CSRaghunandan/.emacs.d/blob/master/setup-files/setup-python.el
 
 (use-package python
+  :ensure t
   :mode (("\\.py\\'" . python-mode))
-  :defer t
   :init
   (setq python-indent-offset 4))
 
+(defvar tyw/pyenv-root (f-expand "~/.pyenv/"))
+
+;;; pyenv 相关配置,主要解决自身项目开发环境问题和Emacs的python路径问题
 (use-package pyenv-mode
   :ensure t
+  :hook ((python-mode . pyenv-mode))
   :init
-  (add-to-list 'exec-path "~/.pyenv/shims")
-  (setenv "WORKON_HOME" "~/.pyenv/versions/")
+  (setenv "WORKON_HOME" (f-join tyw/pyenv-root "versions"))
+  (add-to-list 'exec-path (f-join tyw/pyenv-root "shims"))
   :config
-  (pyenv-mode)
+  (setq python-shell-interpreter (f-join tyw/pyenv-root "shims/python")
+		flycheck-python-pycompile-executable  (f-join tyw/pyenv-root "shims/python")
+		flycheck-python-flake8-executable (f-join tyw/pyenv-root "shims/python")
+		flycheck-python-pylint-executable (f-join tyw/pyenv-root "shims/python")
+		flycheck-python-mypy-executable (f-join tyw/pyenv-root "shims/mypy")
+		lsp-python-ms-python-executable-cmd (f-join tyw/pyenv-root "shims/python")
+		treemacs-python-executable (f-join tyw/pyenv-root "shims/python")
+		lsp-pyls-server-command (f-join tyw/pyenv-root "shims/pyls"))
+  (add-to-list 'python-shell-exec-path (f-join tyw/pyenv-root "shims"))
   :bind
   ("C-x p e" . pyenv-activate-current-project))
 
@@ -563,7 +618,6 @@
   (interactive)
   (f-traverse-upwards
    (lambda (path)
-	 (message path)
 	 (let ((pyenv-version-path (f-expand ".python-version" path)))
 	   (if (f-exists? pyenv-version-path)
 	  (progn
@@ -575,16 +629,30 @@
 (add-hook 'after-init-hook 'pyenv-init)
 (add-hook 'projectile-after-switch-project-hook 'pyenv-activate-current-project)
 
+(defun python-select-interpreter (path)
+  "Select current python interpreter for all related services (Flycheck, Eshell, etc.)."
+  (interactive "FPath: ")
 
-;; Flycheck checks your code and helps show alerts from the linter
-(use-package flycheck
+  (setq python-shell-interpreter             path
+		flycheck-python-pylint-executable    path
+		flycheck-python-pycompile-executable path
+		flycheck-python-flake8-executable    path
+		lsp-python-ms-python-executable-cmd  path
+		treemacs-python-executable           path))
+
+(use-package lsp-python-ms
   :ensure t
-  :diminish flycheck-mode
+  :defer t
+  :hook (python-mode . (lambda ()
+						 (pyenv-activate-current-project)
+						 (require 'lsp-python-ms)
+						 (lsp)))
   :config
-  (progn
-	(setq-default flycheck-phpcs-standard "PSR2")
-	(setq-default flycheck-php-phpcs-executable "/bin/phpcs")
-	(global-flycheck-mode)))
+  ;; for dev build of language server
+  (setq lsp-python-ms-executable
+		"/home/tan/Projects/python-language-server/output/bin/Release/linux-x64/publish/Microsoft.Python.LanguageServer"))
+
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; snippets
 (use-package yasnippet                  ; Snippets
@@ -744,7 +812,7 @@
  '(lsp-trace nil t)
  '(package-selected-packages
    (quote
-	(go-guru jsonnet-mode go-tag gotest neotree general moody evil-visualstar monokai-theme dired-subtree highlight-indent-guides request ms-python company-box yasnippet-snippets yaml-mode which-key web-mode use-package treemacs ssh-deploy solarized-theme smartparens smart-mode-line-powerline-theme shrink-path rainbow-delimiters pyvenv python-mode pyenv-mode prettier-js phpcbf php-mode moe-theme lua-mode lsp-python-ms kubernetes-tramp kubernetes-evil json-mode js2-refactor htmlize helm-rg helm-projectile go-mode flycheck exec-path-from-shell evil-surround evil-nerd-commenter evil-leader evil-escape emmet-mode eldoc-eval dracula-theme doom-themes diminish company-lsp auto-package-update anzu)))
+	(company-prescient lsp-ui go-guru jsonnet-mode go-tag gotest neotree general moody evil-visualstar monokai-theme dired-subtree highlight-indent-guides request ms-python company-box yasnippet-snippets yaml-mode which-key web-mode use-package treemacs ssh-deploy solarized-theme smartparens smart-mode-line-powerline-theme shrink-path rainbow-delimiters pyvenv python-mode pyenv-mode prettier-js phpcbf php-mode moe-theme lua-mode lsp-python-ms kubernetes-tramp kubernetes-evil json-mode js2-refactor htmlize helm-rg helm-projectile go-mode flycheck exec-path-from-shell evil-surround evil-nerd-commenter evil-leader evil-escape emmet-mode eldoc-eval dracula-theme doom-themes diminish company-lsp auto-package-update anzu)))
  '(safe-local-variable-values (quote ((encoding . utf-8)))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
