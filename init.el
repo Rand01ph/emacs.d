@@ -300,6 +300,7 @@
 (use-package projectile
   :ensure t
   :diminish projectile-mode
+  :commands (projectile-mode projectile-switch-project)
   :bind
   (("C-c p f" . helm-projectile-find-file)
    ("C-c p p" . helm-projectile-switch-project)
@@ -311,41 +312,6 @@
 )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; helm
-(use-package helm
-  :diminish helm-mode
-  :ensure t
-  :bind (("C-x C-f" . helm-find-files)
-		 ("M-x" . helm-M-x)
-		 ("C-x b" . helm-mini)
-		 ("C-x C-b" . helm-mini)
-		 ("C-x C-a" . helm-apropos)
-		 ("C-x C-o" . helm-occur)
-		 ("M-y" . helm-show-kill-ring)
-		 :map helm-map
-		 ("<tab>" . helm-execute-persistent-action) ; Rebind TAB to expand
-		 ("C-i" . helm-execute-persistent-action) ; Make TAB work in CLI
-		 ("C-z" . helm-select-action)) ; List actions using C-z
-  :init
-  (setq helm-M-x-fuzzy-match t
-		helm-mode-fuzzy-match t
-		helm-buffers-fuzzy-matching t
-		helm-recentf-fuzzy-match t
-		helm-locate-fuzzy-match t
-		helm-semantic-fuzzy-match t
-		helm-imenu-fuzzy-match t
-		helm-completion-in-region-fuzzy-match t
-		helm-candidate-number-list 150
-		helm-split-window-in-side-p t
-		helm-move-to-line-cycle-in-source t
-		helm-echo-input-in-header-line t
-		helm-autoresize-max-height 0
-		helm-autoresize-min-height 20)
-  :config
-  (progn
-	(setq-default helm-split-window-in-side-p t)
-	(helm-mode 1)))
 
 ;; Which Key
 (use-package which-key
@@ -389,22 +355,40 @@
 		   ;; Others
 		   "vt"  '(vterm-other-window :which-key "open vterm window")))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; helm
+(use-package helm
+  :ensure t
+  :diminish helm-mode
+  :bind (("C-x C-f" . helm-find-files)
+		 ("M-x" . helm-M-x)
+		 ("C-x b" . helm-mini)
+		 ("C-x C-b" . helm-mini)
+		 ("C-x C-o" . helm-occur)
+		 ("M-y" . helm-show-kill-ring)
+		 :map helm-map
+		 ("<tab>" . helm-execute-persistent-action) ; Rebind TAB to expand
+		 ("C-i" . helm-execute-persistent-action) ; Make TAB work in CLI
+		 ("C-z" . helm-select-action)) ; List actions using C-z
+  :init
+  (require 'helm-config)
+  :config
+  (setq helm-buffers-fuzzy-matching t
+		helm-recentf-fuzzy-match t
+		helm-M-x-fuzzy-match t
+		helm-split-window-inside-p t)
+  (helm-mode))
+
 (use-package helm-projectile
   :ensure t
-  :bind (("C-x , p" . helm-projectile-switch-project)
-	 ("C-x , f" . helm-projectile-find-file)
-	 ("C-x , b" . projectile-ibuffer)
-	 ("C-x , i" . projectile-invalidate-cache)
-	 ("C-x , a" . helm-projectile-ag))
-  :init
-  (setq helm-projectile-fuzzy-match t)
+  :after helm-mode
+  :commands helm-projectile
+  :bind ("C-c p h" . helm-projectile)
   :config
-  (progn
-	(use-package helm-rg
-	  :ensure t
-	  :bind (("C-c k" . helm-rg)))
-	(projectile-mode)
-	(setq-default projectile-enable-caching t)))
+  (setq helm-projectile-fuzzy-match t))
+
+(use-package helm-rg
+  :bind
+  (("C-c R" . helm-rg)))
 
 ;; Fancy titlebar for MacOS
 (add-to-list 'default-frame-alist '(ns-transparent-titlebar . t))
