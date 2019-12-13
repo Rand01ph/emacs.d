@@ -1,6 +1,6 @@
 ;;; init.el --- Rand01ph's Emacs configurations.  -*- lexical-binding: t; no-byte-compile: nil; -*-
 
-;; Version: 0.0.3
+;; Version: 0.0.5
 
 ;;; Commentary:
 ;; Emacs 配置,缓慢进化中
@@ -269,7 +269,7 @@
   :config
   (progn
 	(setq-default evil-escape-key-sequence "kj")
-	(setq-default evil-escape-delay 0.2)
+	(setq-default evil-escape-delay 0.1)
 	(evil-escape-mode t)
 	))
 
@@ -317,31 +317,31 @@
   :diminish helm-mode
   :ensure t
   :bind (("C-x C-f" . helm-find-files)
-	 ("M-x" . helm-M-x)
-	 ("C-x b" . helm-mini)
-	 ("C-x C-b" . helm-mini)
-	 ("C-x C-a" . helm-apropos)
-	 ("C-x C-o" . helm-occur)
-	 ("M-y" . helm-show-kill-ring)
-	 :map helm-map
-	 ("<tab>" . helm-execute-persistent-action) ; Rebind TAB to expand
-	 ("C-i" . helm-execute-persistent-action) ; Make TAB work in CLI
-	 ("C-z" . helm-select-action)) ; List actions using C-z
+		 ("M-x" . helm-M-x)
+		 ("C-x b" . helm-mini)
+		 ("C-x C-b" . helm-mini)
+		 ("C-x C-a" . helm-apropos)
+		 ("C-x C-o" . helm-occur)
+		 ("M-y" . helm-show-kill-ring)
+		 :map helm-map
+		 ("<tab>" . helm-execute-persistent-action) ; Rebind TAB to expand
+		 ("C-i" . helm-execute-persistent-action) ; Make TAB work in CLI
+		 ("C-z" . helm-select-action)) ; List actions using C-z
   :init
   (setq helm-M-x-fuzzy-match t
-  helm-mode-fuzzy-match t
-  helm-buffers-fuzzy-matching t
-  helm-recentf-fuzzy-match t
-  helm-locate-fuzzy-match t
-  helm-semantic-fuzzy-match t
-  helm-imenu-fuzzy-match t
-  helm-completion-in-region-fuzzy-match t
-  helm-candidate-number-list 150
-  helm-split-window-in-side-p t
-  helm-move-to-line-cycle-in-source t
-  helm-echo-input-in-header-line t
-  helm-autoresize-max-height 0
-  helm-autoresize-min-height 20)
+		helm-mode-fuzzy-match t
+		helm-buffers-fuzzy-matching t
+		helm-recentf-fuzzy-match t
+		helm-locate-fuzzy-match t
+		helm-semantic-fuzzy-match t
+		helm-imenu-fuzzy-match t
+		helm-completion-in-region-fuzzy-match t
+		helm-candidate-number-list 150
+		helm-split-window-in-side-p t
+		helm-move-to-line-cycle-in-source t
+		helm-echo-input-in-header-line t
+		helm-autoresize-max-height 0
+		helm-autoresize-min-height 20)
   :config
   (progn
 	(setq-default helm-split-window-in-side-p t)
@@ -361,31 +361,33 @@
 (use-package general
   :ensure t
   :config (general-define-key
-  :states '(normal visual insert emacs)
-  :prefix "SPC"
-  :non-normal-prefix "M-SPC"
-  "/"   '(helm-projectile-rg :which-key "ripgrep")
-  "TAB" '(switch-to-prev-buffer :which-key "previous buffer")
-  "SPC" '(helm-M-x :which-key "M-x")
-  "pf"  '(helm-projectile-find-file :which-key "find files")
-  "pp"  '(helm-projectile-switch-project :which-key "switch project")
-  "pb"  '(helm-projectile-switch-to-buffer :which-key "switch buffer")
-  "pr"  '(helm-show-kill-ring :which-key "show kill ring")
-  ;; Buffers
-  "bb"  '(helm-buffers-list :which-key "buffers list")
-  ;; Window
-  "wl"  '(windmove-right :which-key "move right")
-  "wh"  '(windmove-left :which-key "move left")
-  "wk"  '(windmove-up :which-key "move up")
-  "wj"  '(windmove-down :which-key "move bottom")
-  "w/"  '(split-window-right :which-key "split right")
-  "w-"  '(split-window-below :which-key "split bottom")
-  "wx"  '(delete-window :which-key "delete window")
-  ;; flycheck
-  "el" '(flycheck-list-errors :which-key "errors (flycheck)")
-  ;; Others
-  "vt"  '(vterm-other-window :which-key "open vterm window")
-))
+		   :states '(normal visual insert emacs)
+		   :prefix ","
+		   :non-normal-prefix "C-,"
+		   "/"   '(helm-projectile-rg :which-key "ripgrep")
+		   "TAB" '(switch-to-prev-buffer :which-key "previous buffer")
+		   "SPC" '(helm-M-x :which-key "M-x")
+		   "pf"  '(helm-projectile-find-file :which-key "find files")
+		   "pp"  '(helm-projectile-switch-project :which-key "switch project")
+		   "pb"  '(helm-projectile-switch-to-buffer :which-key "switch buffer")
+		   "pr"  '(helm-show-kill-ring :which-key "show kill ring")
+		   ;; Buffers
+		   "bb"  '(helm-buffers-list :which-key "buffers list")
+		   ;; Window
+		   "wl"  '(windmove-right :which-key "move right")
+		   "wh"  '(windmove-left :which-key "move left")
+		   "wk"  '(windmove-up :which-key "move up")
+		   "wj"  '(windmove-down :which-key "move bottom")
+		   "w/"  '(split-window-right :which-key "split right")
+		   "w-"  '(split-window-below :which-key "split bottom")
+		   "wx"  '(delete-window :which-key "delete window")
+		   ;; flycheck
+		   "el" '(flycheck-list-errors :which-key "errors (flycheck)")
+		   ;; magit
+		   "gc" '(magit-commit :wk "git commit")
+		   "gp" '(magit-push :wk "git push")
+		   ;; Others
+		   "vt"  '(vterm-other-window :which-key "open vterm window")))
 
 (use-package helm-projectile
   :ensure t
@@ -420,6 +422,7 @@
 			  (setq-local evil-insert-state-cursor 'box)
 			  (evil-insert-state)))
   (define-key vterm-mode-map [return] #'vterm-send-return)
+  (setq vterm-keymap-exceptions nil)
   (evil-define-key 'insert vterm-mode-map (kbd "C-e")      #'vterm--self-insert)
   (evil-define-key 'insert vterm-mode-map (kbd "C-f")      #'vterm--self-insert)
   (evil-define-key 'insert vterm-mode-map (kbd "C-a")      #'vterm--self-insert)
@@ -437,7 +440,11 @@
   (evil-define-key 'insert vterm-mode-map (kbd "C-t")      #'vterm--self-insert)
   (evil-define-key 'insert vterm-mode-map (kbd "C-g")      #'vterm--self-insert)
   (evil-define-key 'insert vterm-mode-map (kbd "C-c")      #'vterm--self-insert)
-  )
+  (evil-define-key 'insert vterm-mode-map (kbd "C-SPC")    #'vterm--self-insert)
+  (evil-define-key 'normal vterm-mode-map (kbd "C-d")      #'vterm--self-insert)
+  (evil-define-key 'normal vterm-mode-map (kbd "i")        #'evil-insert-resume)
+  (evil-define-key 'normal vterm-mode-map (kbd "o")        #'evil-insert-resume)
+  (evil-define-key 'normal vterm-mode-map (kbd "<return>") #'evil-insert-resume))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -479,6 +486,13 @@
   (progn
 	(setq-default flycheck-phpcs-standard "PSR2")
 	(setq-default flycheck-php-phpcs-executable "/bin/phpcs")))
+
+
+;;; 版本管理
+
+;;; Git
+(use-package magit
+  :ensure t)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;补全和语法检查
@@ -576,14 +590,29 @@
 
 
 ;;; ############ Python #################
+;;; 参考配置
 ;;; https://github.com/swaroopch/rangoli-emacs/blob/master/features/rangoli-python.el
 ;;; https://github.com/CSRaghunandan/.emacs.d/blob/master/setup-files/setup-python.el
+;;; https://github.com/luismayta/emacs.d/blob/develop/src/modules/module-coding-python.el
 
 (use-package python
   :ensure t
   :mode (("\\.py\\'" . python-mode))
   :init
   (setq python-indent-offset 4))
+
+(use-package auto-virtualenv
+  :ensure t
+  :config
+  (add-hook 'python-mode-hook 'auto-virtualenv-set-virtualenv)
+  (add-hook 'projectile-after-switch-project-hook 'auto-virtualenv-set-virtualenv)
+  (add-hook 'pyvenv-post-activate-hooks 'pyvenv-restart-python))
+
+(use-package python-environment
+  :ensure t)
+
+(use-package pyvenv
+  :ensure t)
 
 (defvar tyw/pyenv-root (f-expand "~/.pyenv/"))
 
@@ -606,6 +635,12 @@
   (add-to-list 'python-shell-exec-path (f-join tyw/pyenv-root "shims"))
   :bind
   ("C-x p e" . pyenv-activate-current-project))
+
+(use-package pyenv-mode-auto
+  :config
+  (add-hook 'pyenv-mode-auto-hook
+	(lambda () (shell-command "pip install autopep8 flake8 isort yapf pylint")))
+  )
 
 (defun pyenv-init()
   (setq global-pyenv (replace-regexp-in-string "\n" "" (shell-command-to-string "pyenv global")))
@@ -651,6 +686,18 @@
   ;; for dev build of language server
   (setq lsp-python-ms-executable
 		"/home/tan/Projects/python-language-server/output/bin/Release/linux-x64/publish/Microsoft.Python.LanguageServer"))
+
+;; pip-requirements: Major mode for editing pip requirements files
+;; https://github.com/Wilfred/pip-requirements.el
+(use-package pip-requirements
+  :hook ((pip-requirements-mode . company-mode))
+  :init
+  (setq pip-requirements-index-url "https://mirrors.cloud.tencent.com/pypi/simple/"))
+
+(use-package py-isort
+  :ensure t
+  :config
+  (add-hook 'before-save-hook 'py-isort-before-save))
 
 
 
@@ -711,6 +758,16 @@
   (progn
 	(setq-default php-mode-coding-style 'psr2)))
 
+
+;;; Dockerfile
+(use-package dockerfile-mode
+  :mode ("Dockerfile\\'" . dockerfile-mode))
+
+;; emacs mode for editing ssh config files.
+;; https://github.com/jhgorrell/ssh-config-mode-el
+(use-package ssh-config-mode
+  :ensure t
+  :defer t)
 
 ;; Org Mode
 (use-package htmlize
@@ -807,12 +864,11 @@
    (quote
 	("3c83b3676d796422704082049fc38b6966bcad960f896669dfc21a7a37a748fa" "84d2f9eeb3f82d619ca4bfffe5f157282f4779732f48a5ac1484d94d5ff5b279" default)))
  '(lsp-log-io t)
- '(lsp-print-io t)
  '(lsp-print-performance nil)
  '(lsp-trace nil t)
  '(package-selected-packages
    (quote
-	(company-prescient lsp-ui go-guru jsonnet-mode go-tag gotest neotree general moody evil-visualstar monokai-theme dired-subtree highlight-indent-guides request ms-python company-box yasnippet-snippets yaml-mode which-key web-mode use-package treemacs ssh-deploy solarized-theme smartparens smart-mode-line-powerline-theme shrink-path rainbow-delimiters pyvenv python-mode pyenv-mode prettier-js phpcbf php-mode moe-theme lua-mode lsp-python-ms kubernetes-tramp kubernetes-evil json-mode js2-refactor htmlize helm-rg helm-projectile go-mode flycheck exec-path-from-shell evil-surround evil-nerd-commenter evil-leader evil-escape emmet-mode eldoc-eval dracula-theme doom-themes diminish company-lsp auto-package-update anzu)))
+	(py-isort pyenv-mode-auto python-environment auto-virtualenv pip-requirements ssh-config-mode dockerfile-mode company-prescient lsp-ui go-guru jsonnet-mode go-tag gotest neotree general moody evil-visualstar monokai-theme dired-subtree highlight-indent-guides request ms-python company-box yasnippet-snippets yaml-mode which-key web-mode use-package treemacs ssh-deploy solarized-theme smartparens smart-mode-line-powerline-theme shrink-path rainbow-delimiters pyvenv python-mode pyenv-mode prettier-js phpcbf php-mode moe-theme lua-mode lsp-python-ms kubernetes-tramp kubernetes-evil json-mode js2-refactor htmlize helm-rg helm-projectile go-mode flycheck exec-path-from-shell evil-surround evil-nerd-commenter evil-leader evil-escape emmet-mode eldoc-eval dracula-theme doom-themes diminish company-lsp auto-package-update anzu)))
  '(safe-local-variable-values (quote ((encoding . utf-8)))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
