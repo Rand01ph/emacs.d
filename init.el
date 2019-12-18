@@ -158,21 +158,41 @@
 ;;   :config
 ;;   (load-theme 'doom-one t)
 ;;   (doom-themes-visual-bell-config))
-;; (use-package monokai-theme
-;;   :ensure t
-;;   :config
-;;   (load-theme 'monokai t))
 
-(use-package zenburn-theme
-	:config
-	(load-theme 'zenburn t)
-	(let ((line (face-attribute 'mode-line :underline)))
-		(set-face-attribute 'mode-line          nil :overline   line)
-		(set-face-attribute 'mode-line-inactive nil :overline   line)
-		(set-face-attribute 'mode-line-inactive nil :underline  line)
-		(set-face-attribute 'mode-line          nil :box        nil)
-		(set-face-attribute 'mode-line-inactive nil :box        nil)
-		(set-face-attribute 'mode-line-inactive nil :background "#f9f2d9")))
+(use-package monokai-theme
+  :ensure t
+  :config
+  (load-theme 'monokai t)
+  (let ((line (face-attribute 'mode-line :underline)))
+    (set-face-attribute 'mode-line          nil :overline   line)
+    (set-face-attribute 'mode-line-inactive nil :overline   line)
+    (set-face-attribute 'mode-line-inactive nil :underline  line)
+    (set-face-attribute 'mode-line          nil :box        nil)
+    (set-face-attribute 'mode-line-inactive nil :box        nil)
+    (set-face-attribute 'mode-line-inactive nil :background "#282C34")))
+
+;; (use-package zenburn-theme
+;; 	:config
+;; 	(load-theme 'zenburn t)
+;; 	(let ((line (face-attribute 'mode-line :underline)))
+;; 		(set-face-attribute 'mode-line          nil :overline   line)
+;; 		(set-face-attribute 'mode-line-inactive nil :overline   line)
+;; 		(set-face-attribute 'mode-line-inactive nil :underline  line)
+;; 		(set-face-attribute 'mode-line          nil :box        nil)
+;; 		(set-face-attribute 'mode-line-inactive nil :box        nil)
+;; 		(set-face-attribute 'mode-line-inactive nil :background "#f9f2d9")))
+
+;; (use-package solarized-theme
+;;   :config
+;;   (load-theme 'solarized-light t)
+;;   (let ((line (face-attribute 'mode-line :underline)))
+;;     (set-face-attribute 'mode-line          nil :overline   line)
+;;     (set-face-attribute 'mode-line-inactive nil :overline   line)
+;;     (set-face-attribute 'mode-line-inactive nil :underline  line)
+;;     (set-face-attribute 'mode-line          nil :box        nil)
+;;     (set-face-attribute 'mode-line-inactive nil :box        nil)
+;;     (set-face-attribute 'mode-line-inactive nil :background "#f9f2d9")))
+
 
 ;; Use moody for the mode bar
 (use-package moody
@@ -495,19 +515,27 @@
 		("C-p" . company-select-previous)
 		("<tab>" . company-complete-common))
   :hook (prog-mode . company-mode)
+  :custom
+  (company-minimum-prefix-length 1)
+  (company-transformers nil)
+  (company-tooltip-align-annotations t)
+  (company-idle-delay 0.3)
+  (company-tooltip-limit 10)
+  ;; Trigger completion immediately.
+  (company-idle-delay 0.1)
+  ;; Number the candidates (use M-1, M-2 etc to select completions).
+  (company-show-numbers t)
+  ;; Don't use company in the following modes
+  (company-global-modes '(not shell-mode eaf-mode))
   :config
-  (setq company-minimum-prefix-length 1
-		company-idle-delay 0.3
-		company-tooltip-limit 10
-		company-transformers nil
-		company-show-numbers t
-		))
+  (global-company-mode 1))
 
 ;; company-prescient: Simple but effective sorting and filtering for Emacs.
 ;; https://github.com/raxod502/prescient.el/tree/master
 (use-package company-prescient
   :hook (company-mode . company-prescient-mode)
-  :config (prescient-persist-mode +1))
+  :custom
+  (prescient-persist-mode +1))
 
 
 ;;; ############ lsp #################
@@ -517,13 +545,42 @@
 (use-package lsp-mode
   :ensure t
   :defer t
-  :config
-  (setq lsp-prefer-flymake nil
-		;; for debugging, see `*lsp-log*' buffer
-		lsp-log-io t
-		lsp-print-performance t)
-  (add-hook 'prog-mode-hook #'lsp-deferred))
+  :commands (lsp-deferred)
+  :custom
+  (lsp-auto-guess-root nil)
+  (lsp-prefer-flymake nil)
+  (lsp-print-performance t)
+  ;; for debugging, see `*lsp-log*' buffer
+  (lsp-log-io t)
+  (lsp-file-watch-threshold 2000)
+  :bind (:map lsp-mode-map ("C-c C-f" . lsp-format-buffer))
+  :hook ((python-mode go-mode) . lsp-deferred))
 
+;; https://github.com/emacs-lsp/lsp-ui
+(use-package lsp-ui
+  :ensure t
+  :diminish
+  :commands lsp-ui-mode
+  :after (lsp-mode flycheck)
+  :bind (:map lsp-ui-mode-map
+              ([remap xref-find-definitions] . lsp-ui-peek-find-definitions)
+              ([remap xref-find-references] . lsp-ui-peek-find-references)
+              ("C-c u" . lsp-ui-imenu))
+  :custom
+  (lsp-ui-doc-enable t)
+  (lsp-ui-doc-header t)
+  (lsp-ui-doc-include-signature t)
+  (lsp-ui-doc-position 'top)
+  (lsp-ui-doc-border (face-foreground 'default))
+  (lsp-ui-sideline-enable nil)
+  (lsp-ui-sideline-ignore-duplicate t)
+  (lsp-ui-sideline-show-code-actions nil)
+  (lsp-ui-flycheck-enable t)
+  (lsp-ui-imenu-enable t)
+  :config
+  ;; Use lsp-ui-doc-webkit only in GUI
+  (if *is-gui*
+      (setq lsp-ui-doc-use-webkit t)))
 
 ;; Lsp completion
 ;; https://github.com/tigersoldier/company-lsp
@@ -539,24 +596,14 @@
   (company-lsp-async t)
   (company-lsp-enable-snippet t))
 
-;; https://github.com/emacs-lsp/lsp-ui
-(use-package lsp-ui
-  :ensure t
-  :after (lsp-mode flycheck)
-  :config
-  (define-key lsp-ui-mode-map [remap xref-find-definitions] #'lsp-ui-peek-find-definitions)
-  (define-key lsp-ui-mode-map [remap xref-find-references] #'lsp-ui-peek-find-references)
-  (setq lsp-ui-sideline-enable nil
-		lsp-ui-doc-enable nil
-		lsp-ui-flycheck-enable t
-		lsp-ui-imenu-enable t
-		lsp-ui-sideline-ignore-duplicate t))
 
 ;;; ############ Go #################
 ;;; [go-mode]: https://github.com/dominikh/go-mode.el
 
 (use-package go-guru
   :defer)
+
+;;; go get golang.org/x/tools/gopls@latest
 
 (use-package go-mode
   :defer t
@@ -684,7 +731,6 @@
   (add-hook 'before-save-hook 'py-isort-before-save))
 
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; snippets
 (use-package yasnippet                  ; Snippets
   :ensure t
@@ -730,9 +776,10 @@
   :mode ("\\.jsonnet\\'" . jsonnet-mode))
 
 
-;; lua environment
+;;; lua environment
 (use-package lua-mode
   :ensure t
+  :mode ("\\.lua$" . lua-mode)
   :config
   (setq lua-indent-level 4))
 
