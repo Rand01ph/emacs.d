@@ -123,6 +123,7 @@
 	`((".*" . ,temporary-file-directory)))
 
 (add-hook 'before-save-hook 'whitespace-cleanup)
+(remove-hook 'jsonnet-mode 'whitespace-cleanup t)
 
 ;;; exec-path-from-shell
 (use-package exec-path-from-shell
@@ -164,23 +165,23 @@
   :config
   (load-theme 'monokai t)
   (let ((line (face-attribute 'mode-line :underline)))
-    (set-face-attribute 'mode-line          nil :overline   line)
-    (set-face-attribute 'mode-line-inactive nil :overline   line)
-    (set-face-attribute 'mode-line-inactive nil :underline  line)
-    (set-face-attribute 'mode-line          nil :box        nil)
-    (set-face-attribute 'mode-line-inactive nil :box        nil)
-    (set-face-attribute 'mode-line-inactive nil :background "#282C34")))
+	(set-face-attribute 'mode-line          nil :overline   line)
+	(set-face-attribute 'mode-line-inactive nil :overline   line)
+	(set-face-attribute 'mode-line-inactive nil :underline  line)
+	(set-face-attribute 'mode-line          nil :box        nil)
+	(set-face-attribute 'mode-line-inactive nil :box        nil)
+	(set-face-attribute 'mode-line-inactive nil :background "#282C34")))
 
 ;; (use-package zenburn-theme
-;; 	:config
-;; 	(load-theme 'zenburn t)
-;; 	(let ((line (face-attribute 'mode-line :underline)))
-;; 		(set-face-attribute 'mode-line          nil :overline   line)
-;; 		(set-face-attribute 'mode-line-inactive nil :overline   line)
-;; 		(set-face-attribute 'mode-line-inactive nil :underline  line)
-;; 		(set-face-attribute 'mode-line          nil :box        nil)
-;; 		(set-face-attribute 'mode-line-inactive nil :box        nil)
-;; 		(set-face-attribute 'mode-line-inactive nil :background "#f9f2d9")))
+;;	:config
+;;	(load-theme 'zenburn t)
+;;	(let ((line (face-attribute 'mode-line :underline)))
+;;		(set-face-attribute 'mode-line          nil :overline   line)
+;;		(set-face-attribute 'mode-line-inactive nil :overline   line)
+;;		(set-face-attribute 'mode-line-inactive nil :underline  line)
+;;		(set-face-attribute 'mode-line          nil :box        nil)
+;;		(set-face-attribute 'mode-line-inactive nil :box        nil)
+;;		(set-face-attribute 'mode-line-inactive nil :background "#f9f2d9")))
 
 ;; (use-package solarized-theme
 ;;   :config
@@ -563,9 +564,9 @@
   :commands lsp-ui-mode
   :after (lsp-mode flycheck)
   :bind (:map lsp-ui-mode-map
-              ([remap xref-find-definitions] . lsp-ui-peek-find-definitions)
-              ([remap xref-find-references] . lsp-ui-peek-find-references)
-              ("C-c u" . lsp-ui-imenu))
+			  ([remap xref-find-definitions] . lsp-ui-peek-find-definitions)
+			  ([remap xref-find-references] . lsp-ui-peek-find-references)
+			  ("C-c u" . lsp-ui-imenu))
   :custom
   (lsp-ui-doc-enable t)
   (lsp-ui-doc-header t)
@@ -580,7 +581,7 @@
   :config
   ;; Use lsp-ui-doc-webkit only in GUI
   (if *is-gui*
-      (setq lsp-ui-doc-use-webkit t)))
+	  (setq lsp-ui-doc-use-webkit t)))
 
 ;; Lsp completion
 ;; https://github.com/tigersoldier/company-lsp
