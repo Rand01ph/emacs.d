@@ -805,6 +805,12 @@
 (use-package htmlize
   :ensure t)
 
+;; hugo blog
+(use-package ox-hugo
+  :ensure t            ;Auto-install the package from Melpa (optional)
+  :after ox)
+
+
 (use-package org
   :defines org-publish-project-alist
   :functions org-publish-find-date org-publish-sitemap-default-entry
@@ -895,12 +901,12 @@
  '(custom-safe-themes
    (quote
 	("3c83b3676d796422704082049fc38b6966bcad960f896669dfc21a7a37a748fa" "84d2f9eeb3f82d619ca4bfffe5f157282f4779732f48a5ac1484d94d5ff5b279" default)))
- '(lsp-log-io t)
- '(lsp-print-performance nil)
+ '(lsp-log-io t t)
+ '(lsp-print-performance nil t)
  '(lsp-trace nil t)
  '(package-selected-packages
    (quote
-	(py-isort pyenv-mode-auto python-environment auto-virtualenv pip-requirements ssh-config-mode dockerfile-mode company-prescient lsp-ui go-guru jsonnet-mode go-tag gotest neotree general moody evil-visualstar monokai-theme dired-subtree highlight-indent-guides request ms-python company-box yasnippet-snippets yaml-mode which-key web-mode use-package treemacs ssh-deploy solarized-theme smartparens smart-mode-line-powerline-theme shrink-path rainbow-delimiters pyvenv python-mode pyenv-mode prettier-js phpcbf php-mode moe-theme lua-mode lsp-python-ms kubernetes-tramp kubernetes-evil json-mode js2-refactor htmlize helm-rg helm-projectile go-mode flycheck exec-path-from-shell evil-surround evil-nerd-commenter evil-leader evil-escape emmet-mode eldoc-eval dracula-theme doom-themes diminish company-lsp auto-package-update anzu)))
+	(ox-hugo py-isort pyenv-mode-auto python-environment auto-virtualenv pip-requirements ssh-config-mode dockerfile-mode company-prescient lsp-ui go-guru jsonnet-mode go-tag gotest neotree general moody evil-visualstar monokai-theme dired-subtree highlight-indent-guides request ms-python company-box yasnippet-snippets yaml-mode which-key web-mode use-package treemacs ssh-deploy solarized-theme smartparens smart-mode-line-powerline-theme shrink-path rainbow-delimiters pyvenv python-mode pyenv-mode prettier-js phpcbf php-mode moe-theme lua-mode lsp-python-ms kubernetes-tramp kubernetes-evil json-mode js2-refactor htmlize helm-rg helm-projectile go-mode flycheck exec-path-from-shell evil-surround evil-nerd-commenter evil-leader evil-escape emmet-mode eldoc-eval dracula-theme doom-themes diminish company-lsp auto-package-update anzu)))
  '(safe-local-variable-values (quote ((encoding . utf-8)))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
