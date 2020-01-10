@@ -96,6 +96,12 @@
 (use-package f
   :ensure t)
 
+(use-package memoize
+  :ensure t)
+
+(use-package all-the-icons;
+  :ensure t)
+
 ;; 搜索高亮
 (use-package anzu
 	:config
@@ -316,6 +322,7 @@
 		(global-evil-visualstar-mode)
 		(setq evil-visualstar/persistent nil))
 
+(use-package evil-magit)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;项目配置
 (use-package projectile
@@ -349,8 +356,8 @@
   :ensure t
   :config (general-define-key
 		   :states '(normal visual insert emacs)
-		   :prefix ","
-		   :non-normal-prefix "C-,"
+		   :prefix "SPC"
+		   :non-normal-prefix "M-SPC"
 		   "/"   '(helm-projectile-rg :which-key "ripgrep")
 		   "TAB" '(switch-to-prev-buffer :which-key "previous buffer")
 		   "SPC" '(helm-M-x :which-key "M-x")
@@ -497,7 +504,8 @@
 
 ;;; Git
 (use-package magit
-  :ensure t)
+  :ensure t
+  :hook (with-editor-mode . evil-insert-state))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;补全和语法检查
@@ -620,6 +628,8 @@
   (add-hook 'before-save-hook #'lsp-format-buffer)
   (add-hook 'before-save-hook #'lsp-organize-imports))
 
+(use-package go-playground
+  :defer t)
 
 ;;; ############ Python #################
 ;;; 参考配置
@@ -880,8 +890,7 @@
 	   :publishing-function (org-publish-attachment)))))
 
 (use-package org-bullets
-	:init
-	(add-hook 'org-mode-hook 'org-bullets-mode))
+  :hook (org-mode . org-bullets-mode))
 
 (org-babel-do-load-languages
  'org-babel-load-languages '((C . t)
@@ -889,28 +898,5 @@
 							 (emacs-lisp . t)
 							 (shell . t)))
 
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; init.el ends here
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(custom-safe-themes
-   (quote
-	("3c83b3676d796422704082049fc38b6966bcad960f896669dfc21a7a37a748fa" "84d2f9eeb3f82d619ca4bfffe5f157282f4779732f48a5ac1484d94d5ff5b279" default)))
- '(lsp-log-io t t)
- '(lsp-print-performance nil t)
- '(lsp-trace nil t)
- '(package-selected-packages
-   (quote
-	(ox-hugo py-isort pyenv-mode-auto python-environment auto-virtualenv pip-requirements ssh-config-mode dockerfile-mode company-prescient lsp-ui go-guru jsonnet-mode go-tag gotest neotree general moody evil-visualstar monokai-theme dired-subtree highlight-indent-guides request ms-python company-box yasnippet-snippets yaml-mode which-key web-mode use-package treemacs ssh-deploy solarized-theme smartparens smart-mode-line-powerline-theme shrink-path rainbow-delimiters pyvenv python-mode pyenv-mode prettier-js phpcbf php-mode moe-theme lua-mode lsp-python-ms kubernetes-tramp kubernetes-evil json-mode js2-refactor htmlize helm-rg helm-projectile go-mode flycheck exec-path-from-shell evil-surround evil-nerd-commenter evil-leader evil-escape emmet-mode eldoc-eval dracula-theme doom-themes diminish company-lsp auto-package-update anzu)))
- '(safe-local-variable-values (quote ((encoding . utf-8)))))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(lsp-ui-doc-background ((t (:background nil)))))
