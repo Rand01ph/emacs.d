@@ -29,6 +29,15 @@
 			 (message "Garbage Collector has run for %.06fsec"
 				  (k-time (garbage-collect))))))
 
+;;; Bindings
+;; Unbind unneeded keys
+(global-set-key (kbd "C-z") nil)
+(global-set-key (kbd "M-z") nil)
+(global-set-key (kbd "C-x C-z") nil)
+(global-set-key (kbd "M-/") nil)
+;; Truncate lines
+(global-set-key (kbd "C-x C-l") #'toggle-truncate-lines)
+
 ;;; 编码配置
 (prefer-coding-system 'utf-8)
 (set-default-coding-systems 'utf-8)
@@ -65,7 +74,7 @@
 
 (add-to-list 'load-path (expand-file-name "elisp" user-emacs-directory))
 
-;; Constants
+;; 常量配置
 (defconst *is-a-mac* (eq system-type 'darwin))
 (defconst *is-a-linux* (eq system-type 'gnu/linux))
 (defconst *is-a-windows* (eq system-type 'windows-nt))
@@ -91,7 +100,28 @@
 (dolist (hook '(python-mode-hook prog-mode-hook list-mode-hook))
   (add-hook hook (lambda () (set-fill-column 120))))
 
-;; 核心模块
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; MacOS 配置
+(when (eq system-type 'darwin)
+  ;; Assign command key to meta
+  (setq mac-command-modifier 'meta
+		;; Disabled option key
+		mac-option-modifier nil
+		;; Better scrolling on Mac
+		mac-redisplay-dont-reset-vscroll t
+		mac-mouse-wheel-smooth-scroll nil
+		;; Native fullscreen sucks on Mac
+		ns-use-native-fullscreen nil
+		;; Don't open files from the workspace in a new frame
+		ns-pop-up-frames nil))
+
+;; Fancy titlebar for MacOS
+(add-to-list 'default-frame-alist '(ns-transparent-titlebar . t))
+(add-to-list 'default-frame-alist '(ns-appearance . dark))
+(setq ns-use-proxy-icon  nil)
+(setq frame-title-format nil)
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; 核心模块
 ;; files and directories
 (use-package f
   :ensure t)
@@ -240,7 +270,7 @@
 		  ((eq system-type 'windows-nt) '("DejaVu Sans Mono" "Microsoft Yahei"))))
   (set-face-attribute 'default nil :font
 					  (format "%s:pixelsize=%d" (car my-fonts) (if (> (nth 4 (assq 'geometry (car (display-monitor-attributes-list))))
-																	  2000) 28 14)))
+																	  2000) 26 14)))
   (dolist (charset '(kana han symbol cjk-misc bopomofo))
 	(set-fontset-font (frame-parameter nil 'font) charset
 					  (font-spec :family (car (cdr my-fonts)) :size (if (> (nth 4 (assq 'geometry (car (display-monitor-attributes-list))))
@@ -280,14 +310,13 @@
   :config
   (setq avy-background t))
 
-;; Evil
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Evil
 ;;; evil config
 (use-package evil
   :ensure t
   :init
   (setq evil-want-C-u-scroll t)
   :config
-  (define-key evil-normal-state-map (kbd "s-T") 'vterm)
   (evil-mode 1))
 
 (use-package evil-escape
@@ -302,27 +331,39 @@
 
 (use-package evil-surround
   :ensure t
-  :config
-  (progn
-	(global-evil-surround-mode t)
-	))
+  :hook ((text-mode prog-mode wdired-mode) . evil-surround-mode))
 
 (use-package evil-nerd-commenter
-  :after evil
-  :defer t
-  :ensure t
-  :commands (evilnc-comment-or-uncomment-lines)
+  :commands (evilnc-quick-comment-or-uncomment-to-the-line
+			 evilnc-copy-and-comment-lines
+			 evilnc-comment-or-uncomment-paragraphs)
+  :bind (([remap comment-dwim] . evilnc-comment-or-uncomment-lines)) ;; M-;
   :init
-  (define-key evil-normal-state-map (kbd "s-/") 'evilnc-comment-or-uncomment-lines)
-  (define-key evil-visual-state-map (kbd "s-/") 'evilnc-comment-or-uncomment-lines)
-)
+  (bind-keys :prefix-map evilnc-prefix-map
+			 :prefix "C-c c"
+			 ("l" . evilnc-quick-comment-or-uncomment-to-the-line)
+			 ("c" . evilnc-copy-and-comment-lines)
+			 ("p" . evilnc-comment-or-uncomment-paragraphs)))
 
 (use-package evil-visualstar
 		:config
 		(global-evil-visualstar-mode)
 		(setq evil-visualstar/persistent nil))
 
-(use-package evil-magit)
+(use-package evil-magit
+  :requires evil
+  :after magit
+  :hook (magit-mode . evil-magit-init))
+
+(use-package evil-org
+  :requires evil
+  :after org
+  :diminish
+  :hook ((org-mode . evil-org-mode)
+		 (org-agenda-mode . evil-org-mode)
+		 (evil-org-mode . (lambda () (evil-org-set-key-theme)
+							(require 'evil-org-agenda)
+							(evil-org-agenda-set-keys)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;项目配置
 (use-package projectile
@@ -339,7 +380,7 @@
   (projectile-mode +1)
 )
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; keybind
 
 ;; Which Key
 (use-package which-key
@@ -418,16 +459,10 @@
   :bind
   (("C-c R" . helm-rg)))
 
-;; Fancy titlebar for MacOS
-(add-to-list 'default-frame-alist '(ns-transparent-titlebar . t))
-(add-to-list 'default-frame-alist '(ns-appearance . dark))
-(setq ns-use-proxy-icon  nil)
-(setq frame-title-format nil)
-
 
 ;; https://github.com/akermu/emacs-libvterm
 (use-package vterm
-  :load-path  "/home/tan/Projects/emacs-libvterm/"
+  :load-path  "~/Projects/emacs-libvterm"
   :config
   (add-hook 'vterm-mode-hook
 			(lambda()
@@ -472,6 +507,11 @@
 
 ;;;;;;;;;;;;;;;;;;;; 开发相关配置
 
+;; format all
+(use-package format-all
+  :bind ("C-z C-f" . format-all-buffer))
+
+
 ;; 括号提示
 (use-package smartparens-config
   :ensure smartparens
@@ -494,7 +534,12 @@
   :defer t
   :diminish flycheck-mode
   :hook (prog-mode . flycheck-mode)
+  :init (setq flycheck-keymap-prefix (kbd "C-c f"))
   :config
+  (setq-default flycheck-disabled-checkers '(emacs-lisp-checkdoc))
+  ;; Disable the default keybindings here
+  (define-key flycheck-mode-map flycheck-keymap-prefix nil)
+  (define-key flycheck-mode-map flycheck-keymap-prefix flycheck-command-map)
   (progn
 	(setq-default flycheck-phpcs-standard "PSR2")
 	(setq-default flycheck-php-phpcs-executable "/bin/phpcs")))
@@ -517,15 +562,18 @@
 ;; and this uses the language server to provide semantic completions
 (use-package company
   :ensure t
+  :diminish
   :commands (company-complete-common company-dabbrev)
   :bind
   (:map company-active-map
 		("C-n" . company-select-next)
 		("C-p" . company-select-previous)
 		("<tab>" . company-complete-common))
-  :hook (prog-mode . company-mode)
+ :hook ((prog-mode
+		  comint-mode
+		  text-mode) . company-mode)
   :custom
-  (company-minimum-prefix-length 1)
+  (company-minimum-prefix-length 2)
   (company-transformers nil)
   (company-tooltip-align-annotations t)
   (company-idle-delay 0.3)
@@ -552,44 +600,51 @@
 ;; This is the main mode for LSP
 ;; https://github.com/emacs-lsp/lsp-mode
 (use-package lsp-mode
-  :ensure t
   :defer t
-  :commands (lsp-deferred)
+  :commands lsp
   :custom
   (lsp-auto-guess-root nil)
-  (lsp-prefer-flymake nil)
+  (lsp-prefer-flymake nil) ; Use flycheck instead of flymake
   (lsp-print-performance t)
   ;; for debugging, see `*lsp-log*' buffer
   (lsp-log-io t)
   (lsp-file-watch-threshold 2000)
+  (read-process-output-max (* 1024 1024))
   :bind (:map lsp-mode-map ("C-c C-f" . lsp-format-buffer))
-  :hook ((python-mode go-mode) . lsp-deferred))
+  :hook ((python-mode go-mode
+		  js-mode js2-mode typescript-mode web-mode
+		  c-mode c++-mode objc-mode) . lsp))
 
 ;; https://github.com/emacs-lsp/lsp-ui
 (use-package lsp-ui
-  :ensure t
+  :after lsp-mode
   :diminish
   :commands lsp-ui-mode
-  :after (lsp-mode flycheck)
+  :custom-face
+  (lsp-ui-doc-background ((t (:background nil))))
+  (lsp-ui-doc-header ((t (:inherit (font-lock-string-face italic)))))
   :bind (:map lsp-ui-mode-map
 			  ([remap xref-find-definitions] . lsp-ui-peek-find-definitions)
 			  ([remap xref-find-references] . lsp-ui-peek-find-references)
-			  ("C-c u" . lsp-ui-imenu))
+			  ("C-c u" . lsp-ui-imenu)
+			  ("M-i" . lsp-ui-doc-focus-frame))
   :custom
-  (lsp-ui-doc-enable t)
   (lsp-ui-doc-header t)
   (lsp-ui-doc-include-signature t)
-  (lsp-ui-doc-position 'top)
   (lsp-ui-doc-border (face-foreground 'default))
   (lsp-ui-sideline-enable nil)
   (lsp-ui-sideline-ignore-duplicate t)
   (lsp-ui-sideline-show-code-actions nil)
-  (lsp-ui-flycheck-enable t)
-  (lsp-ui-imenu-enable t)
   :config
   ;; Use lsp-ui-doc-webkit only in GUI
   (if *is-gui*
-	  (setq lsp-ui-doc-use-webkit t)))
+	  (setq lsp-ui-doc-use-webkit t))
+  ;; WORKAROUND Hide mode-line of the lsp-ui-imenu buffer
+  ;; https://github.com/emacs-lsp/lsp-ui/issues/243
+  (defadvice lsp-ui-imenu (after hide-lsp-ui-imenu-mode-line activate)
+	(setq mode-line-format nil))
+  ;; Waiting for https://github.com/emacs-lsp/lsp-ui/pull/390
+  (advice-add #'keyboard-quit :before #'lsp-ui-doc-hide))
 
 ;; Lsp completion
 ;; https://github.com/tigersoldier/company-lsp
@@ -638,10 +693,13 @@
 ;;; https://github.com/luismayta/emacs.d/blob/develop/src/modules/module-coding-python.el
 
 (use-package python
-  :ensure t
+  :ensure nil
+  :after flycheck
   :mode (("\\.py\\'" . python-mode))
-  :init
-  (setq python-indent-offset 4))
+  :custom
+  (python-indent-offset 4)
+  (flycheck-python-pycompile-executable "python3")
+  (python-shell-interpreter "python3"))
 
 (use-package auto-virtualenv
   :ensure t
@@ -672,7 +730,7 @@
 		flycheck-python-pylint-executable (f-join tyw/pyenv-root "shims/python")
 		flycheck-python-mypy-executable (f-join tyw/pyenv-root "shims/mypy")
 		lsp-python-ms-python-executable-cmd (f-join tyw/pyenv-root "shims/python")
-		treemacs-python-executable (f-join tyw/pyenv-root "shims/python")
+		;;treemacs-python-executable (f-join tyw/pyenv-root "shims/python")
 		lsp-pyls-server-command (f-join tyw/pyenv-root "shims/pyls"))
   (add-to-list 'python-shell-exec-path (f-join tyw/pyenv-root "shims"))
   :bind
@@ -720,6 +778,7 @@
 (use-package lsp-python-ms
   :ensure t
   :defer t
+  :after lsp-mode python
   :hook (python-mode . (lambda ()
 						 (pyenv-activate-current-project)
 						 (require 'lsp-python-ms)
@@ -741,6 +800,31 @@
   :config
   (add-hook 'before-save-hook 'py-isort-before-save))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Web Development
+;;; npm i -g typescript
+;;; npm i -g typescript-language-server
+
+;;; Web Mode
+(use-package web-mode
+  :custom-face
+  (css-selector ((t (:inherit default :foreground "#66CCFF"))))
+  (font-lock-comment-face ((t (:foreground "#828282"))))
+  :mode
+  ("\\.phtml\\'" "\\.tpl\\.php\\'" "\\.[agj]sp\\'" "\\.as[cp]x\\'"
+   "\\.erb\\'" "\\.mustache\\'" "\\.djhtml\\'" "\\.[t]?html?\\'"))
+
+;;; JavaScript/TypeScript
+(use-package js2-mode
+  :mode "\\.js\\'"
+  :interpreter "node")
+
+(use-package typescript-mode
+  :mode "\\.ts\\'"
+  :commands (typescript-mode))
+
+(use-package emmet-mode
+  :hook ((web-mode . emmet-mode)
+		 (css-mode . emmet-mode)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; snippets
 (use-package yasnippet                  ; Snippets
@@ -811,7 +895,23 @@
   :ensure t
   :defer t)
 
-;; Org Mode
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Org Mode
+(use-package org
+  :ensure nil
+  :defer t
+  :defines org-publish-project-alist
+  :functions org-publish-find-date org-publish-sitemap-default-entry
+  :config
+  ;;; orgmode 下源码高亮
+  (setq org-src-fontify-natively t)
+  (setq org-ellipsis "⤵")
+  (setq org-src-tab-acts-natively t)
+  (unless (version< org-version "9.2")
+	(require 'org-tempo)))
+
+;; 开启org自动换行
+(add-hook 'org-mode-hook (lambda () (setq truncate-lines nil)))
+
 (use-package htmlize
   :ensure t)
 
@@ -821,74 +921,6 @@
   :after ox)
 
 
-(use-package org
-  :defines org-publish-project-alist
-  :functions org-publish-find-date org-publish-sitemap-default-entry
-  :config
-  ;;; orgmode 下源码高亮
-  (setq org-src-fontify-natively t)
-  (setq org-ellipsis "⤵")
-  (setq org-src-tab-acts-natively t)
-  (defun rk/org-publish-sitemap-time-entry (entry style project)
-	"My org sitemap entry with time ENTRY STYLE PROJECT rk short for 9r0k."
-	(format "%s %s"
-		(format-time-string
-		 "[%Y-%m-%d]"
-		 (org-publish-find-date entry project))
-		(org-publish-sitemap-default-entry entry style project)))
-  (setq org-publish-project-alist
-	'(
-	  ("blog"
-	   :components ("blog-content" "blog-static"))
-	  ("blog-content"
-	   :base-directory "~/Projects/OrgNote/Blog"
-	   :base-extension "org" ;扩展名
-	   :publishing-directory "~/Projects/Rand01ph.github.io"
-	   :recursive t
-	   :publishing-function (org-html-publish-to-html)
-	   :headline-levels 4
-	   :section-numbers nil
-	   :with-toc t
-
-	   :auto-sitemap t                ; Generate sitemap.org automagically...
-	   :sitemap-filename "index.org"  ; ... call it sitemap.org (it's the default)...
-	   :sitemap-title "Just for fun"         ; ... with title 'Sitemap'.
-	   :sitemap-sort-files anti-chronologically
-	   :sitemap-format-entry rk/org-publish-sitemap-time-entry
-
-	   :html-doctype "html5"
-	   :html-validation-link nil
-	   :html-preamble: nil
-	   :html-head-include-scripts nil ;Disable the default javascript snippet
-	   :html-head-include-default-style nil ;Disable the default css style
-	   :html-head "
-<link rel=\"stylesheet\" type=\"text/css\" href=\"https://gongzhitaao.org/orgcss/org.css\"/>
-<!-- Global site tag (gtag.js) - Google Analytics -->
-<script async src=\"https://www.googletagmanager.com/gtag/js?id=UA-67269379-3\"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'UA-67269379-3');
-</script>
-
-<a href=\"https://github.com/Rand01ph\" class=\"github-corner\" aria-label=\"Follow me on GitHub\"><svg width=\"80\" height=\"80\" viewBox=\"0 0 250 250\" style=\"fill:#151513; color:#fff; position: absolute; top: 0; border: 0; left: 0; transform: scale(-1, 1);\" aria-hidden=\"true\"><path d=\"M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z\"></path><path d=\"M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2\" fill=\"currentColor\" style=\"transform-origin: 130px 106px;\" class=\"octo-arm\"></path><path d=\"M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z\" fill=\"currentColor\" class=\"octo-body\"></path></svg><style>.github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}</style></a>"
-
-	   :html-link-home "index.html"
-	   :html-link-up "index.html"
-
-	   :author "Rand01ph"
-	   :email "tanyawei1991@gmail.com"
-	   :language "zh-CN")
-
-	  ("blog-static"
-	   :base-directory "~/Projects/OrgNote/Blog/static"
-	   :base-extension "css\\|js\\|png\\|jpg\\|gif\\|pdf"
-	   :publishing-directory "~/Projects/Rand01ph.github.io/static/"
-	   :recursive t
-	   :publishing-function (org-publish-attachment)))))
-
 (use-package org-bullets
   :hook (org-mode . org-bullets-mode))
 
@@ -896,7 +928,25 @@
  'org-babel-load-languages '((C . t)
 							 (python . t)
 							 (emacs-lisp . t)
+							 (js . t)
 							 (shell . t)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; init.el ends here
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(package-selected-packages
+   (quote
+	(company-ansible ansible emmet-mode typescript-mode js2-mode web-mode format-all evil-org evil-magit all-the-icons memoize yasnippet-snippets yaml-mode which-key use-package ssh-deploy ssh-config-mode smartparens smart-mode-line-powerline-theme rainbow-delimiters python-environment pyenv-mode-auto py-isort pip-requirements php-mode ox-hugo org-bullets moody monokai-theme minions lua-mode lsp-ui lsp-python-ms kubernetes-tramp kubernetes-evil jsonnet-mode json-mode jinja2-mode hydra htmlize highlight-indent-guides helm-rg helm-projectile go-playground go-guru general flycheck exec-path-from-shell evil-visualstar evil-surround evil-nerd-commenter evil-leader evil-escape doom-themes dockerfile-mode dired-subtree diminish diff-hl company-prescient company-lsp avy auto-virtualenv auto-package-update anzu))))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(css-selector ((t (:inherit default :foreground "#66CCFF"))))
+ '(font-lock-comment-face ((t (:foreground "#828282"))))
+ '(lsp-ui-doc-background ((t (:background nil))))
+ '(lsp-ui-doc-header ((t (:inherit (font-lock-string-face italic))))))
