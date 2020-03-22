@@ -7,42 +7,16 @@
 ;; init configurations.
 ;;
 
-;;; Code:
 
-;;; Basic Setup
-(setq user-full-name "Rand01ph"
-	  user-mail-address "tanyawei1991@gmail.com")
+;; 外观配置
+;; Minimal UI
+;;; Disable toolbar & menubar & scroll-bar
+(if (fboundp 'menu-bar-mode) (menu-bar-mode -1))
+(if (fboundp 'tool-bar-mode) (tool-bar-mode -1))
+(if (fboundp 'scroll-bar-mode) (scroll-bar-mode -1))
+(if (fboundp 'tooltip-mode) (tooltip-mode -1))
+(set-window-scroll-bars (minibuffer-window) nil nil)
 
-;;; 定时GC
-(setq gc-cons-threshold (* 20 1024 1024))
-(setq large-file-warning-threshold 100000000)
-
-(defmacro k-time (&rest body)
-  "Measure and return the time it takes evaluating BODY."
-  `(let ((time (current-time)))
-	 ,@body
-	 (float-time (time-since time))))
-
-(defvar k-gc-timer
-  (run-with-idle-timer 15 t
-			   (lambda ()
-			 (message "Garbage Collector has run for %.06fsec"
-				  (k-time (garbage-collect))))))
-
-;;; Bindings
-;; Unbind unneeded keys
-(global-set-key (kbd "C-z") nil)
-(global-set-key (kbd "M-z") nil)
-(global-set-key (kbd "C-x C-z") nil)
-(global-set-key (kbd "M-/") nil)
-;; Truncate lines
-(global-set-key (kbd "C-x C-l") #'toggle-truncate-lines)
-
-;;; 编码配置
-(prefer-coding-system 'utf-8)
-(set-default-coding-systems 'utf-8)
-(set-terminal-coding-system 'utf-8)
-(set-keyboard-coding-system 'utf-8)
 
 ;;; 配置 package.el 源
 (require 'package)
@@ -66,13 +40,36 @@
 (eval-when-compile
   (require 'use-package))
 
-(use-package auto-package-update
-  :config
-  (setq auto-package-update-delete-old-versions t)
-  (setq auto-package-update-hide-results t)
-  (auto-package-update-maybe))
+;; for faster emacs start-up; gets re-set later
+(setq gc-cons-threshold (* 50 1000 1000))
 
-(add-to-list 'load-path (expand-file-name "elisp" user-emacs-directory))
+;; set load path
+(add-to-list 'load-path (concat user-emacs-directory "elisp"))
+
+;;; Basic Setup
+(setq user-full-name "Rand01ph"
+	  user-mail-address "tanyawei1991@gmail.com")
+
+;;; Bindings
+;; Unbind unneeded keys
+(global-set-key (kbd "C-z") nil)
+(global-set-key (kbd "M-z") nil)
+(global-set-key (kbd "C-x C-z") nil)
+(global-set-key (kbd "M-/") nil)
+;; Truncate lines
+(global-set-key (kbd "C-x C-l") #'toggle-truncate-lines)
+
+;;; 编码配置
+;; Use UTF8 everywhere, see https://thraxys.wordpress.com/2016/01/13/utf-8-in-emacs-everywhere-forever/
+(setq locale-coding-system 'utf-8)
+(set-terminal-coding-system 'utf-8)
+(set-keyboard-coding-system 'utf-8)
+(set-selection-coding-system 'utf-8)
+(set-default-coding-systems 'utf-8)
+(set-language-environment 'utf-8)
+(prefer-coding-system 'utf-8)
+(when (display-graphic-p)
+   (setq x-select-request-type '(UTF8_STRING COMPOUND_TEXT TEXT STRING)))
 
 ;; 常量配置
 (defconst *is-a-mac* (eq system-type 'darwin))
@@ -115,6 +112,7 @@
 		ns-pop-up-frames nil))
 
 ;; Fancy titlebar for MacOS
+;; If you're using Emacs on macOS, you can add this to have your titlebar color changed and matching your color theme:
 (add-to-list 'default-frame-alist '(ns-transparent-titlebar . t))
 (add-to-list 'default-frame-alist '(ns-appearance . dark))
 (setq ns-use-proxy-icon  nil)
@@ -123,14 +121,11 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; 核心模块
 ;; files and directories
-(use-package f
-  :ensure t)
+(use-package f)
 
-(use-package memoize
-  :ensure t)
+(use-package memoize)
 
-(use-package all-the-icons;
-  :ensure t)
+(use-package all-the-icons)
 
 ;; 搜索高亮
 (use-package anzu
@@ -164,18 +159,10 @@
 ;;; exec-path-from-shell
 (use-package exec-path-from-shell
   :if (memq window-system '(ns mac x))
-  :ensure t
   :config
   (exec-path-from-shell-initialize)
-  (exec-path-from-shell-copy-envs '("PATH" "GOPATH")))
+  (exec-path-from-shell-copy-envs '("PATH" "GOPATH" "PYTHONPATH")))
 
-
-;; 外观配置
-;;; Disable toolbar & menubar & scroll-bar
-(if (fboundp 'menu-bar-mode) (menu-bar-mode -1))
-(if (fboundp 'tool-bar-mode) (tool-bar-mode -1))
-(if (fboundp 'scroll-bar-mode) (scroll-bar-mode -1))
-(set-window-scroll-bars (minibuffer-window) nil nil)
 
 ;; 在window中使用完整单文件路径名称
 (setq frame-title-format
@@ -191,13 +178,11 @@
 (add-to-list 'default-frame-alist '(alpha . (85 . 85)))
 
 ;; (use-package doom-themes
-;;   :ensure t
 ;;   :config
 ;;   (load-theme 'doom-one t)
 ;;   (doom-themes-visual-bell-config))
 
 (use-package monokai-theme
-  :ensure t
   :config
   (load-theme 'monokai t)
   (let ((line (face-attribute 'mode-line :underline)))
@@ -249,7 +234,6 @@
 (global-hl-line-mode)
 
 (use-package highlight-indent-guides
-  :ensure t
   :diminish
   :hook (prog-mode . highlight-indent-guides-mode)
   :init (setq highlight-indent-guides-method 'column))
@@ -291,12 +275,10 @@
   )
 
 
-(use-package diminish
-  :ensure t)
+(use-package diminish)
 
 
 (use-package dired-subtree
-  :defer t
   :bind (:map dired-mode-map
 		  ("TAB" . dired-subtree-cycle)))
 
@@ -304,7 +286,6 @@
 (setq dired-listing-switches "-AlShr")
 
 (use-package avy
-  :ensure t
   :bind
   ("C-=" . avy-goto-char)
   :config
@@ -313,15 +294,12 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Evil
 ;;; evil config
 (use-package evil
-  :ensure t
   :init
-  (setq evil-want-C-u-scroll t)
+  ;(setq evil-want-C-u-scroll t)
   :config
   (evil-mode 1))
 
 (use-package evil-escape
-  :ensure t
-  :after evil ;; 表示在evil载入后才能载入
   :config
   (progn
 	(setq-default evil-escape-key-sequence "kj")
@@ -330,7 +308,6 @@
 	))
 
 (use-package evil-surround
-  :ensure t
   :hook ((text-mode prog-mode wdired-mode) . evil-surround-mode))
 
 (use-package evil-nerd-commenter
@@ -367,15 +344,12 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;项目配置
 (use-package projectile
-  :ensure t
-  :diminish projectile-mode
   :commands (projectile-mode projectile-switch-project)
   :bind
   (("C-c p f" . helm-projectile-find-file)
    ("C-c p p" . helm-projectile-switch-project)
    ("C-c p s" . projectile-save-project-buffers))
   :config
-  (define-key projectile-mode-map (kbd "s-p") 'projectile-command-map)
   (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
   (projectile-mode +1)
 )
@@ -384,8 +358,6 @@
 
 ;; Which Key
 (use-package which-key
-  :ensure t
-  :diminish which-key-mode
   :init
   (setq which-key-separator " ")
   (setq which-key-prefix-prefix "+")
@@ -394,7 +366,6 @@
 
 ;; Custom keybinding
 (use-package general
-  :ensure t
   :config (general-define-key
 		   :states '(normal visual insert emacs)
 		   :prefix "SPC"
@@ -426,8 +397,6 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; helm
 (use-package helm
-  :ensure t
-  :diminish helm-mode
   :bind (("C-x C-f" . helm-find-files)
 		 ("M-x" . helm-M-x)
 		 ("C-x b" . helm-mini)
@@ -441,14 +410,19 @@
   :init
   (require 'helm-config)
   :config
-  (setq helm-buffers-fuzzy-matching t
+  (setq helm-M-x-fuzzy-match t
+		helm-mode-fuzzy-match t
+		helm-buffers-fuzzy-matching t
 		helm-recentf-fuzzy-match t
-		helm-M-x-fuzzy-match t
-		helm-split-window-inside-p t)
-  (helm-mode))
+		helm-locate-fuzzy-match t
+		helm-semantic-fuzzy-match t
+		helm-imenu-fuzzy-match t
+		helm-completion-in-region-fuzzy-match t
+		helm-candidate-number-list 150
+		helm-split-window-in-side-p t)
+  (helm-mode 1))
 
 (use-package helm-projectile
-  :ensure t
   :after helm-mode
   :commands helm-projectile
   :bind ("C-c p h" . helm-projectile)
@@ -497,12 +471,10 @@
 
 ;;; kubernetes
 (use-package kubernetes
-  :ensure t
   :commands (kubernetes-overview))
 
 ;;; If you want to pull in the Evil compatibility package.
 (use-package kubernetes-evil
-  :ensure t
   :after kubernetes)
 
 ;;;;;;;;;;;;;;;;;;;; 开发相关配置
@@ -513,8 +485,7 @@
 
 
 ;; 括号提示
-(use-package smartparens-config
-  :ensure smartparens
+(use-package smartparens
   :diminish smartparens-mode
   :hook ((prog-mode . smartparens-mode)
 		 (markdown-mode . smartparens-mode))
@@ -522,16 +493,12 @@
   (show-smartparens-global-mode t))
 
 (use-package rainbow-delimiters
-  :ensure t
-  :defer t
   :hook (prog-mode . rainbow-delimiters-mode))
 
 ;; 错误检查
 
 ;; Flycheck checks your code and helps show alerts from the linter
 (use-package flycheck
-  :ensure t
-  :defer t
   :diminish flycheck-mode
   :hook (prog-mode . flycheck-mode)
   :init (setq flycheck-keymap-prefix (kbd "C-c f"))
@@ -549,7 +516,6 @@
 
 ;;; Git
 (use-package magit
-  :ensure t
   :hook (with-editor-mode . evil-insert-state))
 
 
@@ -561,17 +527,12 @@
 ;; company is the best autocompletion system for emacs (probably)
 ;; and this uses the language server to provide semantic completions
 (use-package company
-  :ensure t
-  :diminish
   :commands (company-complete-common company-dabbrev)
   :bind
   (:map company-active-map
 		("C-n" . company-select-next)
 		("C-p" . company-select-previous)
 		("<tab>" . company-complete-common))
- :hook ((prog-mode
-		  comint-mode
-		  text-mode) . company-mode)
   :custom
   (company-minimum-prefix-length 2)
   (company-transformers nil)
@@ -583,9 +544,9 @@
   ;; Number the candidates (use M-1, M-2 etc to select completions).
   (company-show-numbers t)
   ;; Don't use company in the following modes
-  (company-global-modes '(not shell-mode eaf-mode))
+  (company-global-modes '(not erc-mode message-mode help-mode gud-mode eshell-mode shell-mode))
   :config
-  (global-company-mode 1))
+  (global-company-mode +1))
 
 ;; company-prescient: Simple but effective sorting and filtering for Emacs.
 ;; https://github.com/raxod502/prescient.el/tree/master
@@ -600,32 +561,37 @@
 ;; This is the main mode for LSP
 ;; https://github.com/emacs-lsp/lsp-mode
 (use-package lsp-mode
-  :defer t
-  :commands lsp
+  :init
+  ;; @see https://github.com/emacs-lsp/lsp-mode#performance
+  (setq read-process-output-max (* 1024 1024)) ;; 1MB
+  :hook ((lsp-after-open . lsp-enable-imenu)
+		 (lsp-mode . lsp-enable-which-key-integration))
+  :bind (:map lsp-mode-map
+			  ("C-c C-d" . lsp-describe-thing-at-point)
+			  ("C-c C-f" . lsp-format-buffer))
   :custom
-  (lsp-auto-guess-root nil)
   (lsp-prefer-flymake nil) ; Use flycheck instead of flymake
   (lsp-print-performance t)
   ;; for debugging, see `*lsp-log*' buffer
   (lsp-log-io t)
   (lsp-file-watch-threshold 2000)
   (read-process-output-max (* 1024 1024))
-  :bind (:map lsp-mode-map ("C-c C-f" . lsp-format-buffer))
-  :hook ((python-mode go-mode
-		  js-mode js2-mode typescript-mode web-mode
-		  c-mode c++-mode objc-mode) . lsp))
+  :config
+  (evil-define-key 'normal lsp-mode-map
+	  (kbd "g r")        'lsp-find-references
+	  (kbd "g d")        'lsp-find-definition
+	)
+  (setq lsp-auto-guess-root t ; Detect project root
+		lsp-keep-workspace-alive nil)) ; Auto-kill LSP server
 
 ;; https://github.com/emacs-lsp/lsp-ui
 (use-package lsp-ui
   :after lsp-mode
-  :diminish
   :commands lsp-ui-mode
   :custom-face
   (lsp-ui-doc-background ((t (:background nil))))
   (lsp-ui-doc-header ((t (:inherit (font-lock-string-face italic)))))
   :bind (:map lsp-ui-mode-map
-			  ([remap xref-find-definitions] . lsp-ui-peek-find-definitions)
-			  ([remap xref-find-references] . lsp-ui-peek-find-references)
 			  ("C-c u" . lsp-ui-imenu)
 			  ("M-i" . lsp-ui-doc-focus-frame))
   :custom
@@ -649,9 +615,7 @@
 ;; Lsp completion
 ;; https://github.com/tigersoldier/company-lsp
 (use-package company-lsp
-  :ensure t
   :requires company
-  :defer t
   :commands company-lsp
   :config
   (push 'company-lsp company-backends)
@@ -664,141 +628,88 @@
 ;;; ############ Go #################
 ;;; [go-mode]: https://github.com/dominikh/go-mode.el
 
-(use-package go-guru
-  :defer)
+(defun my-try-go-mod (dir)
+  "Find go project root for DIR."
+  (if (and dir
+		   (not (f-descendant-of-p dir (or (getenv "GOPATH")
+										   (concat (getenv "HOME") "/go")))))
+	  (let ((result (locate-dominating-file dir "go.mod")))
+		(if result
+			(cons 'transient (expand-file-name result))
+		  (cons 'transient dir)))
+	(when dir
+		(cons 'transient dir))))
+
+(defun my-go-project-setup ()
+  "Set project root for go project."
+  (setq-local project-find-functions (list #'my-try-go-mod #'project-try-vc)))
+
+(use-package go-guru)
 
 ;;; go get golang.org/x/tools/gopls@latest
 
 (use-package go-mode
-  :defer t
   :mode (("\\.go?\\'" . go-mode))
   :custom (gofmt-command "goimports")
   :bind (:map go-mode-map
 			  ("C-c d" . lsp-describe-thing-at-point)
 			  ("C-i" . company-indent-or-complete-common))
+  :hook ((go-mode . my-go-project-setup))
   :config
-  (require 'go-guru)
-  (add-hook 'go-mode-hook #'lsp)
-  (add-hook 'go-mode-hook #'smartparens-mode)
-  (add-hook 'before-save-hook #'lsp-format-buffer)
-  (add-hook 'before-save-hook #'lsp-organize-imports))
+  (add-hook 'before-save-hook 'gofmt-before-save))
 
-(use-package go-playground
-  :defer t)
+(use-package go-playground)
 
 ;;; ############ Python #################
 ;;; 参考配置
-;;; https://github.com/swaroopch/rangoli-emacs/blob/master/features/rangoli-python.el
-;;; https://github.com/CSRaghunandan/.emacs.d/blob/master/setup-files/setup-python.el
-;;; https://github.com/luismayta/emacs.d/blob/develop/src/modules/module-coding-python.el
 
 (use-package python
-  :ensure nil
-  :after flycheck
   :mode (("\\.py\\'" . python-mode))
   :custom
   (python-indent-offset 4)
-  (flycheck-python-pycompile-executable "python3")
-  (python-shell-interpreter "python3"))
+  (python-indent-guess-indent-offset nil))
 
-(use-package auto-virtualenv
-  :ensure t
-  :config
-  (add-hook 'python-mode-hook 'auto-virtualenv-set-virtualenv)
-  (add-hook 'projectile-after-switch-project-hook 'auto-virtualenv-set-virtualenv)
-  (add-hook 'pyvenv-post-activate-hooks 'pyvenv-restart-python))
+  ;; (use-package pyenv
+  ;;	:straight (:host github :repo "aiguofer/pyenv.el")
+  ;;	:init
+  ;;	(setq pyenv-installation-dir "/usr/local")
+  ;;	:config
+  ;;	;;(setq pyenv-use-alias 't)
+  ;;	(setq pyenv-modestring-prefix " ")
+  ;;	(setq pyenv-modestring-postfix nil)
+  ;;	;; this will remove the colors
+  ;;	(setq pyenv-modeline-function 'pyenv--modeline-plain)
+  ;;	(setq pyenv-set-path t)
 
-(use-package python-environment
-  :ensure t)
+  ;;	(global-pyenv-mode)
+  ;;	(defun pyenv-update-on-buffer-switch (prev curr)
+  ;;	  (if (string-equal "Python" (format-mode-line mode-name nil nil curr))
+  ;;		  (pyenv-use-corresponding)))
+  ;;	(add-hook 'switch-buffer-functions 'pyenv-update-on-buffer-switch))
 
 (use-package pyvenv
-  :ensure t)
-
-(defvar tyw/pyenv-root (f-expand "~/.pyenv/"))
-
-;;; pyenv 相关配置,主要解决自身项目开发环境问题和Emacs的python路径问题
-(use-package pyenv-mode
-  :ensure t
-  :hook ((python-mode . pyenv-mode))
-  :init
-  (setenv "WORKON_HOME" (f-join tyw/pyenv-root "versions"))
-  (add-to-list 'exec-path (f-join tyw/pyenv-root "shims"))
   :config
-  (setq python-shell-interpreter (f-join tyw/pyenv-root "shims/python")
-		flycheck-python-pycompile-executable  (f-join tyw/pyenv-root "shims/python")
-		flycheck-python-flake8-executable (f-join tyw/pyenv-root "shims/python")
-		flycheck-python-pylint-executable (f-join tyw/pyenv-root "shims/python")
-		flycheck-python-mypy-executable (f-join tyw/pyenv-root "shims/mypy")
-		lsp-python-ms-python-executable-cmd (f-join tyw/pyenv-root "shims/python")
-		;;treemacs-python-executable (f-join tyw/pyenv-root "shims/python")
-		lsp-pyls-server-command (f-join tyw/pyenv-root "shims/pyls"))
-  (add-to-list 'python-shell-exec-path (f-join tyw/pyenv-root "shims"))
-  :bind
-  ("C-x p e" . pyenv-activate-current-project))
+  (setenv "WORKON_HOME" "~/.pyenv/versions"))
 
-(use-package pyenv-mode-auto
-  :config
-  (add-hook 'pyenv-mode-auto-hook
-	(lambda () (shell-command "pip install autopep8 flake8 isort yapf pylint")))
-  )
-
-(defun pyenv-init()
-  (setq global-pyenv (replace-regexp-in-string "\n" "" (shell-command-to-string "pyenv global")))
-  (message (concat "Setting pyenv version to " global-pyenv))
-  (pyenv-mode-set global-pyenv)
-  (defvar pyenv-current-version nil global-pyenv))
-
-(defun pyenv-activate-current-project()
-  "Automatically activates pyenv version if .python-version file exists."
-  (interactive)
-  (f-traverse-upwards
-   (lambda (path)
-	 (let ((pyenv-version-path (f-expand ".python-version" path)))
-	   (if (f-exists? pyenv-version-path)
-	  (progn
-		(setq pyenv-current-version (s-trim (f-read-text pyenv-version-path 'utf-8)))
-		(pyenv-mode-set pyenv-current-version)
-		(pyvenv-workon pyenv-current-version)
-		(message (concat "Setting virtualenv to " pyenv-current-version))))))))
-
-(add-hook 'after-init-hook 'pyenv-init)
-(add-hook 'projectile-after-switch-project-hook 'pyenv-activate-current-project)
-
-(defun python-select-interpreter (path)
-  "Select current python interpreter for all related services (Flycheck, Eshell, etc.)."
-  (interactive "FPath: ")
-
-  (setq python-shell-interpreter             path
-		flycheck-python-pylint-executable    path
-		flycheck-python-pycompile-executable path
-		flycheck-python-flake8-executable    path
-		lsp-python-ms-python-executable-cmd  path
-		treemacs-python-executable           path))
+(use-package conda
+  :custom
+  (conda-anaconda-home "/usr/local/Caskroom/miniconda/base/"))
 
 (use-package lsp-python-ms
-  :ensure t
-  :defer t
-  :after lsp-mode python
   :hook (python-mode . (lambda ()
-						 (pyenv-activate-current-project)
-						 (require 'lsp-python-ms)
 						 (lsp)))
   :config
+  (setq lsp-python-ms-extra-paths "/Users/tanyawei/.pyenv/versions/Hato/lib/python2.7/site-packages")
   ;; for dev build of language server
   (setq lsp-python-ms-executable
-		"/home/tan/Projects/python-language-server/output/bin/Release/linux-x64/publish/Microsoft.Python.LanguageServer"))
+		"~/Projects/python-language-server/output/bin/Release/osx-x64/publish/Microsoft.Python.LanguageServer"))
 
 ;; pip-requirements: Major mode for editing pip requirements files
 ;; https://github.com/Wilfred/pip-requirements.el
-(use-package pip-requirements
-  :hook ((pip-requirements-mode . company-mode))
-  :init
-  (setq pip-requirements-index-url "https://mirrors.cloud.tencent.com/pypi/simple/"))
-
-(use-package py-isort
-  :ensure t
-  :config
-  (add-hook 'before-save-hook 'py-isort-before-save))
+;; (use-package pip-requirements
+;;   :hook ((pip-requirements-mode . company-mode))
+;;   :init
+;;   (setq pip-requirements-index-url "https://mirrors.cloud.tencent.com/pypi/simple/"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Web Development
 ;;; npm i -g typescript
@@ -828,7 +739,6 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; snippets
 (use-package yasnippet                  ; Snippets
-  :ensure t
   :commands yas-minor-mode
   :hook (go-mode . yas-minor-mode)
   :config
@@ -838,14 +748,12 @@
 								 '("~/.emacs.d/snippets")))
   (yas-reload-all))
 
-(use-package yasnippet-snippets         ; Collection of snippets
-  :ensure t)
+(use-package yasnippet-snippets)         ; Collection of snippets
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;; yaml-mode
 (use-package yaml-mode
-  :ensure t
   :mode
   (("\\.yml$" . yaml-mode)
    ("\\.yaml$" . yaml-mode))
@@ -859,8 +767,7 @@
 
 ;;; jinja2-mode
 (use-package jinja2-mode
-	:mode ("\\.j2\\'" . jinja2-mode)
-	:defer t)
+	:mode ("\\.j2\\'" . jinja2-mode))
 
 ;;; json-mode
 (use-package json-mode
@@ -873,7 +780,6 @@
 
 ;;; lua environment
 (use-package lua-mode
-  :ensure t
   :mode ("\\.lua$" . lua-mode)
   :config
   (setq lua-indent-level 4))
@@ -891,14 +797,10 @@
 
 ;; emacs mode for editing ssh config files.
 ;; https://github.com/jhgorrell/ssh-config-mode-el
-(use-package ssh-config-mode
-  :ensure t
-  :defer t)
+(use-package ssh-config-mode)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Org Mode
 (use-package org
-  :ensure nil
-  :defer t
   :defines org-publish-project-alist
   :functions org-publish-find-date org-publish-sitemap-default-entry
   :config
@@ -906,18 +808,15 @@
   (setq org-src-fontify-natively t)
   (setq org-ellipsis "⤵")
   (setq org-src-tab-acts-natively t)
-  (unless (version< org-version "9.2")
-	(require 'org-tempo)))
+  (add-to-list 'org-modules 'org-tempo))
 
 ;; 开启org自动换行
 (add-hook 'org-mode-hook (lambda () (setq truncate-lines nil)))
 
-(use-package htmlize
-  :ensure t)
+(use-package htmlize)
 
 ;; hugo blog
 (use-package ox-hugo
-  :ensure t            ;Auto-install the package from Melpa (optional)
   :after ox)
 
 
