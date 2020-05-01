@@ -1,12 +1,11 @@
 ;;; init.el --- Rand01ph's Emacs configurations.  -*- lexical-binding: t; no-byte-compile: nil; -*-
 
-;; Version: 0.0.5
+;; Version: 0.0.6
 
 ;;; Commentary:
 ;; Emacs 配置,缓慢进化中
 ;; init configurations.
 ;;
-
 
 ;; 外观配置
 ;; Minimal UI
@@ -16,7 +15,6 @@
 (if (fboundp 'scroll-bar-mode) (scroll-bar-mode -1))
 (if (fboundp 'tooltip-mode) (tooltip-mode -1))
 (set-window-scroll-bars (minibuffer-window) nil nil)
-
 
 ;;; 配置 package.el 源
 (require 'package)
@@ -229,6 +227,14 @@
   (setq minions-mode-line-lighter ""
 		minions-mode-line-delimiters '("" . ""))
   (minions-mode 1))
+
+;; wakatime
+(use-package wakatime-mode
+  :defer t
+  :init
+  (add-hook 'prog-mode-hook 'wakatime-mode)
+  :config
+  (setq wakatime-cli-path "/usr/local/Caskroom/miniconda/base/bin/wakatime"))
 
 ;; 界面高亮配置
 (global-hl-line-mode)
@@ -662,30 +668,13 @@
 
 ;;; ############ Python #################
 ;;; 参考配置
+;;; 使用 conda 配合 lsp-python-ms 切换python环境及代码补全
 
 (use-package python
   :mode (("\\.py\\'" . python-mode))
   :custom
   (python-indent-offset 4)
   (python-indent-guess-indent-offset nil))
-
-  ;; (use-package pyenv
-  ;;	:straight (:host github :repo "aiguofer/pyenv.el")
-  ;;	:init
-  ;;	(setq pyenv-installation-dir "/usr/local")
-  ;;	:config
-  ;;	;;(setq pyenv-use-alias 't)
-  ;;	(setq pyenv-modestring-prefix " ")
-  ;;	(setq pyenv-modestring-postfix nil)
-  ;;	;; this will remove the colors
-  ;;	(setq pyenv-modeline-function 'pyenv--modeline-plain)
-  ;;	(setq pyenv-set-path t)
-
-  ;;	(global-pyenv-mode)
-  ;;	(defun pyenv-update-on-buffer-switch (prev curr)
-  ;;	  (if (string-equal "Python" (format-mode-line mode-name nil nil curr))
-  ;;		  (pyenv-use-corresponding)))
-  ;;	(add-hook 'switch-buffer-functions 'pyenv-update-on-buffer-switch))
 
 (use-package pyvenv
   :config
@@ -699,7 +688,6 @@
   :hook (python-mode . (lambda ()
 						 (lsp)))
   :config
-  (setq lsp-python-ms-extra-paths "/Users/tanyawei/.pyenv/versions/Hato/lib/python2.7/site-packages")
   ;; for dev build of language server
   (setq lsp-python-ms-executable
 		"~/Projects/python-language-server/output/bin/Release/osx-x64/publish/Microsoft.Python.LanguageServer"))
@@ -839,7 +827,7 @@
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
    (quote
-	(company-ansible ansible emmet-mode typescript-mode js2-mode web-mode format-all evil-org evil-magit all-the-icons memoize yasnippet-snippets yaml-mode which-key use-package ssh-deploy ssh-config-mode smartparens smart-mode-line-powerline-theme rainbow-delimiters python-environment pyenv-mode-auto py-isort pip-requirements php-mode ox-hugo org-bullets moody monokai-theme minions lua-mode lsp-ui lsp-python-ms kubernetes-tramp kubernetes-evil jsonnet-mode json-mode jinja2-mode hydra htmlize highlight-indent-guides helm-rg helm-projectile go-playground go-guru general flycheck exec-path-from-shell evil-visualstar evil-surround evil-nerd-commenter evil-leader evil-escape doom-themes dockerfile-mode dired-subtree diminish diff-hl company-prescient company-lsp avy auto-virtualenv auto-package-update anzu))))
+	(ox-reveal wakatime-mode company-ansible ansible emmet-mode typescript-mode js2-mode web-mode format-all evil-org evil-magit all-the-icons memoize yasnippet-snippets yaml-mode which-key use-package ssh-deploy ssh-config-mode smartparens smart-mode-line-powerline-theme rainbow-delimiters python-environment pyenv-mode-auto py-isort pip-requirements php-mode ox-hugo org-bullets moody monokai-theme minions lua-mode lsp-ui lsp-python-ms kubernetes-tramp kubernetes-evil jsonnet-mode json-mode jinja2-mode hydra htmlize highlight-indent-guides helm-rg helm-projectile go-playground go-guru general flycheck exec-path-from-shell evil-visualstar evil-surround evil-nerd-commenter evil-leader evil-escape doom-themes dockerfile-mode dired-subtree diminish diff-hl company-prescient company-lsp avy auto-virtualenv auto-package-update anzu))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
