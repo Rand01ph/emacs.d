@@ -1,0 +1,6 @@
+
+** proxy
+
+#+begin_src bash
+ls -l /opt/homebrew/opt/curl/bin/curl || brew install curl
+#+end_src
