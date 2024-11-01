@@ -496,6 +496,20 @@ If the new path's directories does not exist, create them."
   (doom-modeline-mode 1))
 
 
+(use-package rime
+  :config
+  (setq rime-show-candidate 'posframe)
+  (setq rime-disable-predicates
+	'(rime-predicate-evil-mode-p
+	  rime-predicate-after-alphabet-char-p
+	  rime-predicate-prog-in-code-p))
+  :bind
+  (:map rime-mode-map
+        ("C-`" . 'rime-send-keybinding))
+  :custom
+  (default-input-method "rime"))
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;;   Optional mixins

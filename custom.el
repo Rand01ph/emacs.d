@@ -9,8 +9,8 @@
 	 evil-owl exec-path-from-shell gcmh go-mode helpful
 	 highlight-indent-guides json-mode jtsx kind-icon magit
 	 marginalia markdown-mode mb-url nyan-mode orderless
-	 org-contrib pyenv-mode rainbow-delimiters treesit-auto
-	 vertico which-key yaml-mode)))
+	 org-contrib php-mode pyenv-mode rainbow-delimiters rime
+	 treesit-auto vertico which-key yaml-mode)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
